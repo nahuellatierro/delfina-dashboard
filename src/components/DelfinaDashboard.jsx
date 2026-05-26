@@ -13,8 +13,8 @@ import {
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  'https://npvwxgwdtfoulkwfbitp.supabase.co',   // ← REEMPLAZAR con tu Project URL
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wdnd4Z3dkdGZvdWxrd2ZiaXRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NTQ0NDIsImV4cCI6MjA5NDUzMDQ0Mn0.n3Akmn2B6B8Alm65Z4LVjRHgVRjlmxxaBpGXHddBiU0'                    // ← REEMPLAZAR con tu anon public key
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY                    
 );
 
 const SUPABASE_READY = true;  // Cambiar a false para volver al modo demo
