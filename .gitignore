@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Documentación operativa interna (URLs de webhooks, IDs, prompts). NUNCA subir: repo público.
+docs/
