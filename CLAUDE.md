@@ -21,6 +21,9 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
 - Antes de publicar un cambio en producción: backup + `test_workflow` con datos simulados + verificar el prompt byte a
   byte. Después, mirar las primeras ejecuciones reales. Procedimiento completo en `docs/06-runbook-ejecuciones.md`.
 - En ManyChat, confirmar que la cuenta abierta es la de GymBox antes de editar (ver `docs/03-manychat.md`).
+- Desde el 05/10 hay un detector de quejas y objetos perdidos que corre antes de Delfina y avisa por Telegram
+  (`docs/14-propuesta-detector-quejas.md`). Si se cambian sus reglas, volver a correr el set de prueba de
+  `docs/workflows/quejas/` antes de publicar. La sección de quejas está en los dos prompts.
 
 ## Verificación de cambios
 
