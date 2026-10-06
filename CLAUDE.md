@@ -24,6 +24,10 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
 - Desde el 05/10 hay un detector de quejas y objetos perdidos que corre antes de Delfina y avisa por Telegram
   (`docs/14-propuesta-detector-quejas.md`). Si se cambian sus reglas, volver a correr el set de prueba de
   `docs/workflows/quejas/` antes de publicar. La sección de quejas está en los dos prompts.
+- Desde el 07/10, el corte de burbujas de WhatsApp (`Split Burbujas`) manda en una sola burbuja el saludo
+  ("Soy Delfina") y la confirmación de la clase de prueba ("Avisá en recepción que venís a la clase de prueba"), y
+  nunca deja un saludo corto solo. Si se cambian esas frases en el prompt, cambiar también el código.
+- Boxeo y CrossFit no tienen clase de prueba (en los dos prompts) hasta que Beto diga lo contrario.
 
 ## Verificación de cambios
 
