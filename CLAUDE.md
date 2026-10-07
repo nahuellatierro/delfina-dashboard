@@ -29,6 +29,9 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   nunca deja solos un saludo corto al principio ni una frase corta (hasta 45 caracteres) al final. Si se cambian
   esas frases en el prompt, cambiar también el código.
 - Boxeo y CrossFit no tienen clase de prueba (en los dos prompts) hasta que Beto diga lo contrario.
+- En el gym no hay tatami: boxeo se hace con zapatillas y kickboxing descalzo. Está en los dos prompts y en la pestaña
+  `Info_General` del Sheet (desde el 07/10). Delfina repite lo que diga el Sheet, así que un dato de negocio se
+  corrige en el Sheet además del prompt.
 
 ## Verificación de cambios
 
