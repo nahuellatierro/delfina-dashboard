@@ -28,6 +28,10 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   ("Soy Delfina") y la confirmación de la clase de prueba ("Avisá en recepción que venís a la clase de prueba"), y
   nunca deja solos un saludo corto al principio ni una frase corta (hasta 45 caracteres) al final. Si se cambian
   esas frases en el prompt, cambiar también el código.
+- Desde el 14/10, en Instagram la bienvenida a seguidores nuevos de ManyChat ("Say hi to new followers") le pasa la
+  charla a Delfina cuando el seguidor toca "Info": manda un mensaje fijo con un `[Aviso del sistema: seguidor nuevo ...]`
+  que el prompt de IG sabe tratar. Si se cambia ese texto en ManyChat, cambiar también la regla del prompt de IG (y al
+  revés). Ya no se pide el WhatsApp en ese flow. Detalle en `docs/03-manychat.md`.
 - Boxeo y CrossFit no tienen clase de prueba (en los dos prompts) hasta que Beto diga lo contrario.
 - En el gym no hay tatami: boxeo se hace con zapatillas y kickboxing descalzo. Está en los dos prompts y en la pestaña
   `Info_General` del Sheet (desde el 07/10). Delfina repite lo que diga el Sheet, así que un dato de negocio se
