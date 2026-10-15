@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Delfina escucha las quejas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #04070a;
+    --green: #00f48e;
+    --teal: #16e0a2;
+    --cyan: #00feca;
+    --red: #ff3d57;
+    --orange: #ff9933;
+    --text: #ffffff;
+    --muted: #9aa7a3;
+    --card: rgba(14, 24, 22, 0.72);
+    --line: rgba(22, 224, 162, 0.28);
+  }
+  @page { size: 1080px 1440px; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); }
+  body { font-family: 'Space Grotesk', sans-serif; color: var(--text); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .page {
+    width: 1080px; height: 1440px; position: relative; overflow: hidden;
+    background: var(--bg); page-break-after: always; break-after: page;
+    padding: 96px 88px;
+  }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+
+  /* aurora + grilla */
+  .aurora { position: absolute; border-radius: 50%; filter: blur(110px); opacity: .55; pointer-events: none; }
+  .grid {
+    position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image:
+      linear-gradient(rgba(22,224,162,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(22,224,162,.05) 1px, transparent 1px);
+    background-size: 72px 72px;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 75%);
+            mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 75%);
+  }
+  .content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; }
+
+  .tag {
+    font-family: 'JetBrains Mono', monospace; font-size: 24px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--teal); display: inline-flex; align-items: center; gap: 14px;
+    border: 1px solid var(--line); border-radius: 999px; padding: 12px 24px; align-self: flex-start;
+    background: rgba(6, 20, 16, .6);
+  }
+  .tag .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--green); box-shadow: 0 0 14px var(--green); }
+  .tag.red { color: #ff8a98; border-color: rgba(255,61,87,.35); }
+  .tag.red .dot { background: var(--red); box-shadow: 0 0 14px var(--red); }
+
+  h1 { font-weight: 700; letter-spacing: -0.035em; line-height: .98; }
+  .lead { font-size: 38px; line-height: 1.35; color: #c9d4d0; font-weight: 400; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .accent { color: var(--green); }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 36px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.02) inset, 0 30px 80px rgba(0,0,0,.55), 0 0 60px rgba(0,244,142,.08);
+    backdrop-filter: blur(6px);
+  }
+
+  .footer {
+    margin-top: auto; display: flex; justify-content: space-between; align-items: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 22px; color: #5f6e6a; letter-spacing: .08em;
+  }
+  .footer .brand { display: flex; align-items: center; gap: 14px; }
+  .bot {
+    width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--line); display: grid; place-items: center;
+    background: rgba(0,244,142,.07);
+  }
+
+  /* ---------- P1 portada ---------- */
+  .p1 h1 { font-size: 150px; margin-top: 70px; }
+  .p1 .lead { margin-top: 40px; max-width: 470px; }
+  .p1 .visual { position: absolute; right: 70px; bottom: 175px; width: 480px; height: 520px; }
+  .bubble-big {
+    position: absolute; left: 0; top: 40px; width: 360px; padding: 34px 36px; border-radius: 36px 36px 36px 8px;
+    font-size: 30px; line-height: 1.3; color: #e6efec;
+  }
+  .bubble-big .who { font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--muted); margin-bottom: 12px; letter-spacing: .06em; }
+  .flow {
+    position: absolute; left: 150px; top: 230px; width: 200px; height: 140px;
+  }
+  .bell {
+    position: absolute; right: 0; bottom: 0; width: 230px; height: 230px; border-radius: 60px;
+    display: grid; place-items: center;
+    background: radial-gradient(circle at 50% 40%, rgba(0,244,142,.28), rgba(0,40,28,.9) 70%);
+    border: 1px solid rgba(0,244,142,.55);
+    box-shadow: 0 0 90px rgba(0,244,142,.45), 0 0 0 14px rgba(0,244,142,.06), 0 0 0 30px rgba(0,244,142,.03);
+  }
+  .badge {
+    position: absolute; right: -10px; bottom: 190px; background: var(--red); color: #fff; font-weight: 700; font-size: 28px;
+    width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; box-shadow: 0 0 30px rgba(255,61,87,.7);
+  }
+
+  /* ---------- P2 qué pasaba ---------- */
+  .p2 h1 { font-size: 108px; margin-top: 56px; }
+  .quote-wrap { margin-top: 70px; position: relative; }
+  .quote {
+    padding: 60px 64px 56px; border-radius: 48px 48px 48px 12px; font-size: 76px; font-weight: 700; line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+  .quote .q { color: var(--green); }
+  .quote .meta { font-family: 'JetBrains Mono', monospace; font-size: 22px; color: var(--muted); font-weight: 400; letter-spacing: .06em; margin-top: 30px; display: flex; gap: 18px; align-items: center; }
+  .typing { display: inline-flex; gap: 8px; }
+  .typing i { width: 10px; height: 10px; border-radius: 50%; background: #3d4b47; display: block; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 44px; }
+  .mini { padding: 34px 36px; border-radius: 30px; }
+  .mini .k { font-family: 'JetBrains Mono', monospace; font-size: 20px; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 16px; }
+  .mini .v { font-size: 31px; line-height: 1.3; color: #dfe8e5; }
+  .mini.bad { border-color: rgba(255,61,87,.35); background: rgba(40, 10, 16, .55); }
+  .mini.bad .k { color: #ff8a98; }
+  .mini.bad .v s { color: #8a6b70; }
+
+  /* ---------- P3 alerta ---------- */
+  .p3 h1 { font-size: 100px; margin-top: 56px; }
+  .phone {
+    margin: 48px auto 0; width: 700px; border-radius: 64px; padding: 34px 30px 40px;
+    background: linear-gradient(180deg, rgba(20,30,28,.95), rgba(8,14,13,.95));
+    border: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 40px 120px rgba(0,0,0,.6), 0 0 80px rgba(0,254,202,.10);
+  }
+  .phone .notch { width: 150px; height: 10px; border-radius: 99px; background: rgba(255,255,255,.12); margin: 0 auto 28px; }
+  .tg-head { display: flex; align-items: center; gap: 18px; padding: 0 12px 22px; border-bottom: 1px solid rgba(255,255,255,.07); }
+  .tg-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #2aa3e0, #1c7fc0); display: grid; place-items: center; }
+  .tg-head .name { font-size: 28px; font-weight: 600; }
+  .tg-head .sub { font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--muted); margin-top: 4px; }
+  .tg-head .time { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--muted); }
+  .alert {
+    margin: 26px 8px 0; padding: 30px 32px; border-radius: 28px; background: rgba(255,61,87,.07);
+    border: 1px solid rgba(255,61,87,.35); box-shadow: 0 0 50px rgba(255,61,87,.10);
+  }
+  .alert .t { color: #ff6b7d; font-weight: 700; font-size: 32px; }
+  .alert .p { font-size: 29px; margin-top: 18px; }
+  .alert .c { font-size: 28px; margin-top: 10px; color: #b9c4c1; font-style: italic; }
+  .alert .lnk { font-size: 24px; margin-top: 18px; color: #4fc3f7; }
+  .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 8px 0; }
+  .btn { text-align: center; padding: 22px 10px; border-radius: 20px; font-size: 26px; font-weight: 600; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); }
+  .btn.ok { background: rgba(0,244,142,.12); border-color: rgba(0,244,142,.45); color: #b9ffd9; box-shadow: 0 0 30px rgba(0,244,142,.15); }
+  .p3 .lead { margin-top: 36px; font-size: 34px; text-align: center; }
+
+  /* ---------- P4 cómo decide ---------- */
+  .p4 h1 { font-size: 100px; margin-top: 56px; }
+  .rows { margin-top: 56px; display: flex; flex-direction: column; gap: 22px; }
+  .row { display: flex; align-items: center; gap: 26px; padding: 30px 34px; border-radius: 30px; }
+  .row .msg { font-size: 34px; flex: 1; color: #e8f0ed; }
+  .row .arrow { color: #44524e; font-size: 34px; }
+  .pill { font-family: 'JetBrains Mono', monospace; font-size: 22px; letter-spacing: .1em; text-transform: uppercase; padding: 14px 22px; border-radius: 999px; min-width: 210px; text-align: center; }
+  .pill.on { color: #04140d; background: var(--green); box-shadow: 0 0 30px rgba(0,244,142,.45); font-weight: 700; }
+  .pill.off { color: #9aa7a3; border: 1px solid rgba(255,255,255,.14); }
+  .row.hot { border-color: rgba(0,244,142,.45); }
+  .p4 .note { margin-top: 44px; font-size: 38px; line-height: 1.35; color: #c9d4d0; }
+  .p4 .note b { color: #fff; }
+
+  /* ---------- P5 seguimiento ---------- */
+  .p5 h1 { font-size: 112px; margin-top: 56px; }
+  .timeline { margin-top: 80px; position: relative; padding-left: 130px; }
+  .timeline::before {
+    content: ""; position: absolute; left: 47px; top: 40px; bottom: 60px; width: 4px; border-radius: 4px;
+    background: linear-gradient(180deg, var(--red), var(--orange) 45%, var(--green));
+    box-shadow: 0 0 20px rgba(0,244,142,.35);
+  }
+  .step { position: relative; margin-bottom: 46px; padding: 34px 38px; border-radius: 30px; }
+  .step .n {
+    position: absolute; left: -130px; top: 22px; width: 98px; height: 98px; border-radius: 30px; display: grid; place-items: center;
+    background: #071310; border: 1px solid var(--line); box-shadow: 0 0 30px rgba(0,244,142,.15);
+  }
+  .step .k { font-family: 'JetBrains Mono', monospace; font-size: 20px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .step .v { font-size: 38px; font-weight: 600; margin-top: 8px; }
+  .step.done { border-color: rgba(0,244,142,.5); box-shadow: 0 0 50px rgba(0,244,142,.12); }
+  .step.done .v { color: #b9ffd9; }
+  .report {
+    margin-top: 10px; display: flex; align-items: center; gap: 28px; padding: 32px 38px; border-radius: 30px;
+    background: rgba(0,244,142,.06); border: 1px dashed rgba(0,244,142,.4);
+  }
+  .report .clock { font-family: 'JetBrains Mono', monospace; font-size: 44px; font-weight: 700; color: var(--green); text-shadow: 0 0 20px rgba(0,244,142,.6); }
+  .report .txt { font-size: 32px; line-height: 1.3; color: #dfe8e5; }
+
+  /* ---------- P6 cierre ---------- */
+  .p6 h1 { font-size: 96px; margin-top: 56px; }
+  .p6 h1 .old { color: #6b7975; text-decoration: line-through; text-decoration-thickness: 6px; text-decoration-color: rgba(255,61,87,.7); }
+  .chat { margin-top: 48px; padding: 44px 40px; border-radius: 44px; }
+  .chat .bar { display: flex; align-items: center; gap: 18px; padding-bottom: 26px; border-bottom: 1px solid rgba(255,255,255,.07); margin-bottom: 30px; }
+  .chat .bar .av { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: rgba(0,244,142,.1); border: 1px solid rgba(0,244,142,.5); box-shadow: 0 0 24px rgba(0,244,142,.3); }
+  .chat .bar .n { font-size: 30px; font-weight: 600; }
+  .chat .bar .s { font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--green); margin-top: 4px; }
+  .msgrow { display: flex; margin-bottom: 22px; }
+  .msgrow.me { justify-content: flex-end; }
+  .b { max-width: 72%; padding: 24px 30px; font-size: 31px; line-height: 1.32; border-radius: 30px; }
+  .b.in { background: rgba(255,255,255,.07); border-radius: 30px 30px 30px 8px; }
+  .b.out { background: linear-gradient(135deg, rgba(0,244,142,.22), rgba(0,254,202,.14)); border: 1px solid rgba(0,244,142,.45); border-radius: 30px 30px 8px 30px; }
+  .b .who { font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--green); margin-bottom: 8px; letter-spacing: .06em; }
+  .b .tm { font-family: 'JetBrains Mono', monospace; font-size: 17px; color: rgba(255,255,255,.4); text-align: right; margin-top: 8px; }
+  .closing { margin-top: 40px; font-size: 58px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; color: var(--green); text-shadow: 0 0 40px rgba(0,244,142,.35); }
+
+  svg { display: block; }
+</style>
+</head>
+<body>
+
+<!-- 1 · Portada -->
+<section class="page p1">
+  <div class="aurora" style="width:760px;height:760px;left:-260px;top:-300px;background:#00f48e;"></div>
+  <div class="aurora" style="width:700px;height:700px;right:-300px;bottom:-200px;background:#00b8ff;opacity:.38;"></div>
+  <div class="aurora" style="width:420px;height:420px;right:120px;bottom:300px;background:#00feca;opacity:.22;"></div>
+  <div class="grid"></div>
+  <div class="content">
+    <span class="tag"><span class="dot"></span>Live · 05/10</span>
+    <h1>Delfina ahora escucha las quejas.</h1>
+    <p class="lead">Y se las pasa al encargado en el momento.</p>
+    <div class="footer">
+      <span class="brand"><span class="bot"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16e0a2" stroke-width="1.8"><rect x="4" y="7" width="16" height="12" rx="4"/><path d="M12 7V4"/><circle cx="9" cy="13" r="1.2" fill="#16e0a2"/><circle cx="15" cy="13" r="1.2" fill="#16e0a2"/></svg></span>Delfina · asistente IA de GymBox</span>
+      <span>1/6</span>
+    </div>
+  </div>
+  <div class="visual" style="z-index:3">
+    <div class="bubble-big card"><div class="who">WHATSAPP · AHORA</div>“Anoche no andaban las duchas”</div>
+    <svg class="flow" viewBox="0 0 200 140" fill="none">
+      <path d="M10 6 C 20 90, 120 70, 182 132" stroke="url(#g1)" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round"/>
+      <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#16e0a2" stop-opacity=".3"/><stop offset="1" stop-color="#00f48e"/></linearGradient></defs>
+    </svg>
+    <div class="bell">
+      <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#00f48e" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 12px #00f48e)"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    </div>
+    <div class="badge">1</div>
+  </div>
+</section>
+
+<!-- 2 · Qué pasaba -->
+<section class="page p2">
+  <div class="aurora" style="width:640px;height:640px;right:-240px;top:-220px;background:#00f48e;opacity:.4;"></div>
+  <div class="aurora" style="width:560px;height:560px;left:-260px;bottom:-160px;background:#ff3d57;opacity:.16;"></div>
+  <div class="grid"></div>
+  <div class="content">
+    <span class="tag"><span class="dot"></span>Qué pasaba</span>
+    <h1>Una queja no es una consulta más.</h1>
+    <div class="quote-wrap">
+      <div class="quote card"><span class="q">«</span>Anoche no andaban las duchas<span class="q">»</span>
+        <div class="meta"><span class="typing"><i></i><i></i><i></i></span>Lo escribe alguien que ya está enojado</div>
+      </div>
+    </div>
+    <div class="split">
+      <div class="mini card bad"><div class="k">Si la respuesta es</div><div class="v">«Eso consultalo en recepción»</div></div>
+      <div class="mini card bad"><div class="k">Pasa esto</div><div class="v">Se enoja dos veces. Y nadie del gym se entera.</div></div>
+    </div>
+    <div class="footer"><span class="brand">• LIVE · GYMBOX AI</span><span>2/6</span></div>
+  </div>
+</section>
+
+<!-- 3 · Canal de quejas -->
+<section class="page p3">
+  <div class="aurora" style="width:700px;height:700px;left:-280px;top:-260px;background:#00f48e;opacity:.42;"></div>
+  <div class="aurora" style="width:620px;height:620px;right:-260px;bottom:-140px;background:#2aa3e0;opacity:.3;"></div>
+  <div class="grid"></div>
+  <div class="content">
+    <span class="tag red"><span class="dot"></span>Canal de quejas</span>
+    <h1>Si alguien se queja, el encargado se entera al toque.</h1>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="tg-head">
+        <div class="tg-avatar"><svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M21.5 4.3 2.9 11.5c-1.3.5-1.3 1.2-.2 1.6l4.8 1.5 1.8 5.6c.2.6.1.9.8.9.5 0 .7-.2 1-.5l2.3-2.3 4.8 3.6c.9.5 1.5.2 1.7-.8l3.2-15c.3-1.3-.5-1.9-1.6-1.4z"/></svg></div>
+        <div><div class="name">GymBox · Quejas</div><div class="sub">bot · grupo del equipo</div></div>
+        <div class="time">ahora</div>
+      </div>
+      <div class="alert">
+        <div class="t">🚨 Queja · Instalaciones</div>
+        <div class="p">👤 <b>Laura</b> · por WhatsApp</div>
+        <div class="c">“Anoche no andaban las duchas”</div>
+        <div class="lnk">🔗 Abrir el chat</div>
+      </div>
+      <div class="btns"><div class="btn ok">✅ Resuelta</div><div class="btn">❌ No era queja</div></div>
+    </div>
+    <p class="lead">Llega con quién escribió, qué pasó<br>y un link para contestarle.</p>
+    <div class="footer"><span class="brand">• LIVE · GYMBOX AI</span><span>3/6</span></div>
+  </div>
+</section>
+
+<!-- 4 · Cómo decide -->
+<section class="page p4">
+  <div class="aurora" style="width:620px;height:620px;right:-220px;top:-200px;background:#00feca;opacity:.32;"></div>
+  <div class="aurora" style="width:620px;height:620px;left:-280px;bottom:-180px;background:#00f48e;opacity:.3;"></div>
+  <div class="grid"></div>
+  <div class="content">
+    <span class="tag"><span class="dot"></span>Cómo decide</span>
+    <h1>No busca palabras.<br>Entiende qué pasó.</h1>
+    <div class="rows">
+      <div class="row card hot"><span class="msg">“Se rompió la cinta”</span><span class="arrow">→</span><span class="pill on">Avisa</span></div>
+      <div class="row card"><span class="msg">“¿Tienen cintas?”</span><span class="arrow">→</span><span class="pill off">Responde</span></div>
+      <div class="row card hot"><span class="msg">“Me olvidé la campera”</span><span class="arrow">→</span><span class="pill on">Avisa</span></div>
+      <div class="row card"><span class="msg">“Tengo horarios rotativos”</span><span class="arrow">→</span><span class="pill off">Responde</span></div>
+    </div>
+    <p class="note">Una pregunta no es una queja.<br><b>Y una queja no siempre dice “queja”.</b></p>
+    <div class="footer"><span class="brand">• LIVE · GYMBOX AI</span><span>4/6</span></div>
+  </div>
+</section>
+
+<!-- 5 · Seguimiento -->
+<section class="page p5">
+  <div class="aurora" style="width:700px;height:700px;left:-300px;top:-240px;background:#00f48e;opacity:.36;"></div>
+  <div class="aurora" style="width:520px;height:520px;right:-200px;top:520px;background:#ff9933;opacity:.14;"></div>
+  <div class="aurora" style="width:600px;height:600px;right:-240px;bottom:-240px;background:#00feca;opacity:.26;"></div>
+  <div class="grid"></div>
+  <div class="content">
+    <span class="tag"><span class="dot"></span>Seguimiento</span>
+    <h1>Ninguna queja queda colgada.</h1>
+    <div class="timeline">
+      <div class="step card">
+        <div class="n"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ff6b7d" stroke-width="1.6" stroke-linecap="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+        <div class="k">Paso 1</div><div class="v">Llega el aviso al grupo</div>
+      </div>
+      <div class="step card">
+        <div class="n"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#ff9933" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/></svg></div>
+        <div class="k">Paso 2</div><div class="v">Alguien del equipo la resuelve</div>
+      </div>
+      <div class="step card done">
+        <div class="n"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00f48e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 6px #00f48e)"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div class="k">Paso 3</div><div class="v">Se marca ✅ con nombre y hora</div>
+      </div>
+    </div>
+    <div class="report">
+      <div class="clock">8:30</div>
+      <div class="txt">Las que siguen abiertas aparecen cada mañana en el reporte.</div>
+    </div>
+    <div class="footer"><span class="brand">• LIVE · GYMBOX AI</span><span>5/6</span></div>
+  </div>
+</section>
+
+<!-- 6 · Cierre -->
+<section class="page p6">
+  <div class="aurora" style="width:760px;height:760px;right:-300px;top:-300px;background:#00f48e;opacity:.4;"></div>
+  <div class="aurora" style="width:640px;height:640px;left:-280px;bottom:-220px;background:#00feca;opacity:.3;"></div>
+  <div class="grid"></div>
+  <div class="content">
+    <span class="tag"><span class="dot"></span>Para el que escribe</span>
+    <h1><span class="old">«Andá a recepción»</span><br>Ahora, alguien lo escuchó.</h1>
+    <div class="chat card">
+      <div class="bar">
+        <div class="av"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#00f48e" stroke-width="1.8"><rect x="4" y="7" width="16" height="12" rx="4"/><path d="M12 7V4"/><circle cx="9" cy="13" r="1.2" fill="#00f48e"/><circle cx="15" cy="13" r="1.2" fill="#00f48e"/></svg></div>
+        <div><div class="n">Delfina</div><div class="s">● en línea</div></div>
+      </div>
+      <div class="msgrow"><div class="b in">Anoche no andaban las duchas 😤<div class="tm">21:14</div></div></div>
+      <div class="msgrow me"><div class="b out"><div class="who">DELFINA</div>Uh, qué macana. Ya se lo pasé al equipo para que lo revisen.<div class="tm">21:14 ✓✓</div></div></div>
+    </div>
+    <p class="closing">Escuchar también es parte de atender.</p>
+    <div class="footer"><span class="brand">• LIVE · GYMBOX AI</span><span>6/6</span></div>
+  </div>
+</section>
+
+</body>
+</html>
