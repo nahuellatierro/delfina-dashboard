@@ -113,7 +113,7 @@ function normalizar(texto) {
 }
 
 function formatHora(date) {
-  return date.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 }
 
 function canalLabel(raw) {
