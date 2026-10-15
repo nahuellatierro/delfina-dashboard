@@ -28,6 +28,11 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   ("Soy Delfina") y la confirmación de la clase de prueba ("Avisá en recepción que venís a la clase de prueba"), y
   nunca deja solos un saludo corto al principio ni una frase corta (hasta 45 caracteres) al final. Si se cambian
   esas frases en el prompt, cambiar también el código.
+- Desde el 15/10, el dashboard cuenta las clases de prueba buscando esa misma frase ("Avisá en recepción que venís a
+  la clase de prueba") en la memoria de Delfina. Si se cambia en el prompt, cambiar también la función
+  `dashboard_metricas` y la vista `v_gymbox_leads` de Supabase (`docs/17-dashboard-quejas-delfina.md`).
+- El dashboard (`delfina-dashboard.vercel.app`) pide login y solo muestra datos a los mails de la tabla
+  `dashboard_acceso`; las vistas y tablas de Delfina no se leen con la clave anon. No volver a abrirlas.
 - Desde el 14/10, en Instagram la bienvenida a seguidores nuevos de ManyChat ("Say hi to new followers") le pasa la
   charla a Delfina cuando el seguidor toca "Info": manda un mensaje fijo con un `[Aviso del sistema: seguidor nuevo ...]`
   que el prompt de IG sabe tratar. Si se cambia ese texto en ManyChat, cambiar también la regla del prompt de IG (y al
