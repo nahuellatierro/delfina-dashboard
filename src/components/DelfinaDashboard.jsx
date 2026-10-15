@@ -1,29 +1,25 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area, CartesianGrid,
+  PieChart, Pie, Cell, CartesianGrid,
 } from "recharts";
 
-/* ═══════════════════════════════════════════════════════════════════
-   SUPABASE — Pegá tus credenciales acá
-   ═══════════════════════════════════════════════════════════════════
-   1. Project Settings > Data API > Project URL
-   2. Project Settings > Data API > anon public key
-*/
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY                    
-);
+import { supabase } from "../lib/supabase";
 
 const SUPABASE_READY = true;  // Cambiar a false para volver al modo demo
+
+// Supabase devuelve como máximo 1.000 filas por consulta: se pide de a páginas.
+const PAGE_SIZE = 1000;
+const LEAD_COLUMNS = "user_id,user_name,total_mensajes,ultimo_mensaje,fecha_interaccion,origen_lead,actividad_interes,tema_derivacion,estado_calificacion,canal";
+const FEED_PAGE = 100;
+
+const ESTADOS = ["Calificado", "En proceso", "Sin respuesta", "No califica"];
 
 // ── Colores Recharts ─────────────────────────────────────────────
 const C = {
   accent: "#34d399", blue: "#60a5fa", orange: "#fb923c",
   purple: "#c084fc", red: "#f87171", yellow: "#fbbf24",
-  cyan: "#22d3ee", textDim: "rgba(255,255,255,0.45)",
+  cyan: "#22d3ee", slate: "#94a3b8", textDim: "rgba(255,255,255,0.45)",
   gridLine: "rgba(255,255,255,0.06)",
 };
 const ACT_COLORS = [C.accent, C.blue, C.orange, C.purple, C.cyan];
@@ -91,9 +87,29 @@ function countBy(arr, key) {
    a la versión limpia que usa el dashboard */
 function cleanEstado(raw) {
   if (!raw) return "En proceso";
-  if (raw.includes("Calificado")) return "Calificado";
+  if (raw.includes("Calificado") || raw.includes("Inscrito")) return "Calificado";
+  if (raw.includes("Sin respuesta")) return "Sin respuesta";
   if (raw.includes("No califica")) return "No califica";
   return "En proceso";
+}
+
+async function fetchAllLeads() {
+  let all = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("v_gymbox_leads")
+      .select(LEAD_COLUMNS)
+      .order("fecha_interaccion", { ascending: false })
+      .order("user_id", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    all = all.concat(data || []);
+    if (!data || data.length < PAGE_SIZE) return all;
+  }
+}
+
+function canalLabel(raw) {
+  return raw === "instagram" ? "Instagram" : "WhatsApp";
 }
 
 function origenLabel(raw) {
@@ -145,8 +161,10 @@ function ChartTooltip({ active, payload, label }) {
 function FilterPill({ label, active, onClick }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer border ${
+      aria-pressed={active}
+      className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 ${
         active
           ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.1)]"
           : "bg-white/[0.03] border-white/[0.08] text-white/40 hover:bg-white/[0.06] hover:text-white/60"
@@ -161,6 +179,7 @@ function Badge({ status }) {
   const config = {
     "Calificado": { bg: "bg-emerald-500/10", border: "border-emerald-500/20", text: "text-emerald-400" },
     "En proceso": { bg: "bg-yellow-500/10", border: "border-yellow-500/20", text: "text-yellow-400" },
+    "Sin respuesta": { bg: "bg-slate-400/10", border: "border-slate-400/20", text: "text-slate-300" },
     "No califica": { bg: "bg-red-500/10", border: "border-red-500/20", text: "text-red-400" },
   };
   const c = config[status] || config["En proceso"];
@@ -173,55 +192,62 @@ function Badge({ status }) {
 
 // ── Dashboard ────────────────────────────────────────────────────
 
-function DelfinaDashboard() {
+function DelfinaDashboard({ email, onSignOut }) {
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sinAcceso, setSinAcceso] = useState(false);
 
   const [dateRange, setDateRange] = useState("todos");
   const [estadoFilter, setEstadoFilter] = useState("todos");
   const [origenFilter, setOrigenFilter] = useState("todos");
+  const [canalFilter, setCanalFilter] = useState("todos");
+  const [feedLimit, setFeedLimit] = useState(FEED_PAGE);
 
+  // Si una recarga falla, se conservan los datos anteriores y se avisa.
+  // Nunca se muestran datos de demo como si fueran reales.
+  // Solo cambia estado después de esperar la respuesta (puede correr desde un efecto).
   const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-
     if (!SUPABASE_READY) {
       setTimeout(() => { setRawData(FALLBACK); setLoading(false); }, 800);
       return;
     }
 
     try {
-      const { data, error: sbError } = await supabase
-        .from('v_gymbox_leads')
-        .select('*')
-        .order('fecha_interaccion', { ascending: false });
+      const { data: acceso, error: accesoError } = await supabase.rpc("es_acceso_dashboard");
+      if (!accesoError && acceso === false) {
+        setSinAcceso(true);
+        setRawData([]);
+        return;
+      }
+      setSinAcceso(false);
 
-      if (sbError) throw sbError;
-
-      // Normalizar estados (quitar emojis si vienen de Supabase)
-      const cleaned = (data || []).map(row => ({
+      const data = await fetchAllLeads();
+      setRawData(data.map(row => ({
         ...row,
         estado_calificacion: cleanEstado(row.estado_calificacion),
-      }));
-
-      setRawData(cleaned);
+      })));
+      setError(null);
     } catch (err) {
       console.error("Supabase error:", err);
-      setError(err.message);
-      setRawData(FALLBACK);
+      setError(err.message || "No se pudieron cargar los datos");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    // fetchData solo cambia estado después de un await o en un setTimeout.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
     if (SUPABASE_READY) {
       const id = setInterval(fetchData, 5 * 60 * 1000);
       return () => clearInterval(id);
     }
   }, []);
+
+  // Al cambiar un filtro, el feed vuelve a mostrar la primera página.
+  const withFeedReset = (setter) => (value) => { setter(value); setFeedLimit(FEED_PAGE); };
 
   // ── Datos filtrados ────────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -233,8 +259,7 @@ function DelfinaDashboard() {
     }
 
     if (estadoFilter !== "todos") {
-      const map = { calificado: "Calificado", proceso: "En proceso", nocalifica: "No califica" };
-      result = result.filter(r => r.estado_calificacion === map[estadoFilter]);
+      result = result.filter(r => r.estado_calificacion === estadoFilter);
     }
 
     if (origenFilter !== "todos") {
@@ -242,8 +267,12 @@ function DelfinaDashboard() {
       result = result.filter(r => r.origen_lead === map[origenFilter]);
     }
 
-    return result;
-  }, [rawData, dateRange, estadoFilter, origenFilter]);
+    if (canalFilter !== "todos") {
+      result = result.filter(r => (r.canal || "whatsapp") === canalFilter);
+    }
+
+    return result.sort((a, b) => new Date(b.fecha_interaccion) - new Date(a.fecha_interaccion));
+  }, [rawData, dateRange, estadoFilter, origenFilter, canalFilter]);
 
   // ── KPIs ───────────────────────────────────────────────────────
   const kpis = useMemo(() => {
@@ -252,8 +281,8 @@ function DelfinaDashboard() {
     const promedio = total > 0 ? (totalMsgs / total).toFixed(1) : 0;
     const pauta = filtered.filter(r => r.origen_lead === "Pauta publicitaria").length;
     const pautaPct = total > 0 ? Math.round((pauta / total) * 100) : 0;
-    const agendados = filtered.filter(r => r.estado_calificacion === "Calificado").length;
-    return { totalMsgs, total, promedio, pautaPct, pauta, agendados };
+    const calificados = filtered.filter(r => r.estado_calificacion === "Calificado").length;
+    return { totalMsgs, total, promedio, pautaPct, pauta, calificados };
   }, [filtered]);
 
   // ── Charts ─────────────────────────────────────────────────────
@@ -283,8 +312,8 @@ function DelfinaDashboard() {
   const estadosChart = useMemo(() => {
     const map = {};
     filtered.forEach(r => { map[r.estado_calificacion] = (map[r.estado_calificacion] || 0) + 1; });
-    const colors = { "Calificado": C.accent, "En proceso": C.yellow, "No califica": C.red };
-    return Object.entries(map).map(([name, count]) => ({ name, count, fill: colors[name] || C.blue }));
+    const colors = { "Calificado": C.accent, "En proceso": C.yellow, "Sin respuesta": C.slate, "No califica": C.red };
+    return ESTADOS.filter(name => map[name]).map(name => ({ name, count: map[name], fill: colors[name] }));
   }, [filtered]);
 
   // ── Loading / Error ────────────────────────────────────────────
@@ -294,14 +323,21 @@ function DelfinaDashboard() {
         <div className="absolute inset-0 rounded-full border-2 border-white/5" />
         <div className="absolute inset-0 rounded-full border-2 border-t-emerald-400 animate-spin" />
       </div>
-      <span className="text-sm text-white/30 font-mono tracking-wide">Conectando con Delfina...</span>
+      <span role="status" className="text-sm text-white/30 font-mono tracking-wide">Conectando con Delfina...</span>
+    </div>
+  );
+
+  if (sinAcceso) return (
+    <div className="flex flex-col items-center justify-center min-h-dvh gap-4 px-4 text-center">
+      <span className="text-sm text-pretty text-white/70">{email} no tiene acceso al dashboard de Delfina.</span>
+      <button type="button" onClick={onSignOut} className="px-5 py-2 rounded-xl bg-white/[0.05] backdrop-blur border border-white/10 text-white/70 font-mono text-[13px] hover:border-emerald-500/30 hover:text-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition-colors cursor-pointer">Salir</button>
     </div>
   );
 
   if (error && rawData.length === 0) return (
-    <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-      <span className="text-sm text-red-400/80">Error: {error}</span>
-      <button onClick={fetchData} className="px-5 py-2 rounded-xl bg-white/[0.05] backdrop-blur border border-white/10 text-white/70 font-mono text-[13px] hover:border-emerald-500/30 hover:text-emerald-400 transition-all cursor-pointer">Reintentar</button>
+    <div className="flex flex-col items-center justify-center min-h-dvh gap-4 px-4 text-center">
+      <span role="alert" className="text-sm text-pretty text-red-400/80">No se pudieron cargar los datos: {error}</span>
+      <button type="button" onClick={() => { setLoading(true); fetchData(); }} className="px-5 py-2 rounded-xl bg-white/[0.05] backdrop-blur border border-white/10 text-white/70 font-mono text-[13px] hover:border-emerald-500/30 hover:text-emerald-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition-colors cursor-pointer">Reintentar</button>
     </div>
   );
 
@@ -321,21 +357,36 @@ function DelfinaDashboard() {
       <div className="relative z-10 px-4 py-8 sm:px-6 lg:px-10 max-w-7xl mx-auto">
 
         {/* Header */}
-        <header className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="relative flex items-center justify-center">
-              <div className="w-2 h-2 rounded-full bg-emerald-400" />
-              <div className="absolute w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+        <header className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="relative flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                <div className="absolute w-2 h-2 rounded-full bg-emerald-400 animate-ping motion-reduce:hidden" />
+              </div>
+              <span className="text-xs text-emerald-400/70 font-mono uppercase tracking-[2.5px]">
+                {SUPABASE_READY ? "Live" : "Demo"} · GymBox AI
+              </span>
             </div>
-            <span className="text-xs text-emerald-400/70 font-mono uppercase tracking-[2.5px]">
-              {SUPABASE_READY ? "Live" : "Demo"} · GymBox AI
-            </span>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white/95">Delfina Dashboard</h1>
+            <p className="text-sm text-white/50 mt-1.5 font-light tabular-nums">
+              {filtered.length.toLocaleString("es-AR")} leads · {kpis.totalMsgs.toLocaleString("es-AR")} mensajes totales
+            </p>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white/95">Delfina Dashboard</h1>
-          <p className="text-sm text-white/25 mt-1.5 font-light">
-            {filtered.length} leads · {kpis.totalMsgs} mensajes totales
-          </p>
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-medium border bg-white/[0.03] border-white/[0.08] text-white/60 hover:bg-white/[0.06] hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition-colors cursor-pointer"
+          >
+            Salir
+          </button>
         </header>
+
+        {error && (
+          <div role="status" className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            No se pudo actualizar ({error}). Se muestran los datos de la última carga.
+          </div>
+        )}
 
         {/* Filtros */}
         <div className={`${glass} p-4 mb-6`}>
@@ -344,23 +395,31 @@ function DelfinaDashboard() {
               <span className="text-[10px] uppercase tracking-[1.5px] text-white/30 font-mono">Período</span>
               <div className="flex gap-1.5 flex-wrap">
                 {[{ key: "hoy", label: "Hoy" }, { key: "7d", label: "7 días" }, { key: "mes", label: "Este mes" }, { key: "todos", label: "Todos" }].map(f => (
-                  <FilterPill key={f.key} label={f.label} active={dateRange === f.key} onClick={() => setDateRange(f.key)} />
+                  <FilterPill key={f.key} label={f.label} active={dateRange === f.key} onClick={() => withFeedReset(setDateRange)(f.key)} />
                 ))}
               </div>
             </div>
             <div className="flex flex-col gap-2">
               <span className="text-[10px] uppercase tracking-[1.5px] text-white/30 font-mono">Estado</span>
               <div className="flex gap-1.5 flex-wrap">
-                {[{ key: "todos", label: "Todos" }, { key: "calificado", label: "Calificado" }, { key: "proceso", label: "En proceso" }, { key: "nocalifica", label: "No califica" }].map(f => (
-                  <FilterPill key={f.key} label={f.label} active={estadoFilter === f.key} onClick={() => setEstadoFilter(f.key)} />
+                {["todos", ...ESTADOS].map(key => (
+                  <FilterPill key={key} label={key === "todos" ? "Todos" : key} active={estadoFilter === key} onClick={() => withFeedReset(setEstadoFilter)(key)} />
                 ))}
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <span className="text-[10px] uppercase tracking-[1.5px] text-white/30 font-mono">Origen</span>
+              <span className="text-[10px] uppercase tracking-[1.5px] text-white/30 font-mono">Canal</span>
+              <div className="flex gap-1.5 flex-wrap">
+                {[{ key: "todos", label: "Todos" }, { key: "whatsapp", label: "WhatsApp" }, { key: "instagram", label: "Instagram" }].map(f => (
+                  <FilterPill key={f.key} label={f.label} active={canalFilter === f.key} onClick={() => withFeedReset(setCanalFilter)(f.key)} />
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] uppercase tracking-[1.5px] text-white/30 font-mono">Origen (estimado)</span>
               <div className="flex gap-1.5 flex-wrap">
                 {[{ key: "todos", label: "Todos" }, { key: "pauta", label: "Pauta" }, { key: "organico", label: "Orgánico" }].map(f => (
-                  <FilterPill key={f.key} label={f.label} active={origenFilter === f.key} onClick={() => setOrigenFilter(f.key)} />
+                  <FilterPill key={f.key} label={f.label} active={origenFilter === f.key} onClick={() => withFeedReset(setOrigenFilter)(f.key)} />
                 ))}
               </div>
             </div>
@@ -369,11 +428,11 @@ function DelfinaDashboard() {
 
         {/* KPIs */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-          <KPI label="Mensajes" value={kpis.totalMsgs.toLocaleString()} sub="acumulados" accent />
-          <KPI label="Leads Únicos" value={kpis.total} sub={porDiaChart.length > 0 ? `en ${porDiaChart.length} días` : ""} />
+          <KPI label="Mensajes" value={kpis.totalMsgs.toLocaleString("es-AR")} sub="acumulados" accent />
+          <KPI label="Leads Únicos" value={kpis.total.toLocaleString("es-AR")} sub={porDiaChart.length > 0 ? `en ${porDiaChart.length} días` : ""} />
           <KPI label="Promedio" value={kpis.promedio} sub="msgs/lead" />
-          <KPI label="Pauta" value={`${kpis.pautaPct}%`} sub={`${kpis.pauta} leads`} />
-          <KPI label="Agendados" value={kpis.agendados} sub="calificados" accent />
+          <KPI label="Pauta (estimado)" value={`${kpis.pautaPct}%`} sub={`${kpis.pauta.toLocaleString("es-AR")} leads`} />
+          <KPI label="Calificados" value={kpis.calificados.toLocaleString("es-AR")} sub="cerraron bien con Delfina" accent />
         </div>
 
         {/* Row 1 */}
@@ -430,7 +489,7 @@ function DelfinaDashboard() {
               <div className="h-[200px] flex items-center justify-center text-white/20 text-sm font-mono">Sin datos</div>
             )}
           </Card>
-          <Card title="Top derivaciones a recepción">
+          <Card title="Top derivaciones a recepción (estimado)">
             {derivacionesChart.length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={derivacionesChart} layout="vertical" barSize={18} margin={{ left: 10 }}>
@@ -451,7 +510,7 @@ function DelfinaDashboard() {
 
         {/* Row 3 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-          <Card title="Origen de leads">
+          <Card title="Origen de leads (estimado)">
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <ResponsiveContainer width={150} height={150}>
                 <PieChart>
@@ -492,8 +551,8 @@ function DelfinaDashboard() {
               </div>
               <div>
                 <span className="text-xs text-white/30 block mb-1">Tasa de calificación</span>
-                <span className="text-base font-semibold text-emerald-400">{filtered.length > 0 ? `${Math.round((kpis.agendados / filtered.length) * 100)}%` : "—"}</span>
-                <span className="text-[11px] text-white/20 block mt-0.5">{kpis.agendados} de {filtered.length} leads</span>
+                <span className="text-base font-semibold text-emerald-400">{filtered.length > 0 ? `${Math.round((kpis.calificados / filtered.length) * 100)}%` : "—"}</span>
+                <span className="text-[11px] text-white/40 block mt-0.5">{kpis.calificados.toLocaleString("es-AR")} de {filtered.length.toLocaleString("es-AR")} leads</span>
               </div>
               <div>
                 <span className="text-xs text-white/30 block mb-1">Derivación top</span>
@@ -518,15 +577,16 @@ function DelfinaDashboard() {
 
           <div className="max-h-[400px] overflow-y-auto pr-1" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.08) transparent" }}>
             {filtered.length === 0 ? (
-              <div className="py-12 text-center text-white/20 text-sm font-mono">No hay leads para los filtros seleccionados</div>
+              <div className="py-12 text-center text-white/40 text-sm font-mono">No hay leads para los filtros seleccionados</div>
             ) : (
               filtered
-                .sort((a, b) => new Date(b.fecha_interaccion) - new Date(a.fecha_interaccion))
+                .slice(0, feedLimit)
                 .map((lead, i) => (
                   <div key={lead.user_id + i} className="grid grid-cols-1 lg:grid-cols-[1fr_0.8fr_0.7fr_0.5fr_0.8fr_1.2fr] gap-2 lg:gap-3 px-4 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
                     <div className="flex flex-col">
                       <span className="text-sm text-white/80 font-medium">{lead.user_name}</span>
-                      <span className="text-[11px] text-white/20 font-mono lg:hidden">{formatDate(lead.fecha_interaccion)}</span>
+                      <span className="text-[11px] text-white/60">{canalLabel(lead.canal)}</span>
+                      <span className="text-[11px] text-white/40 font-mono lg:hidden">{formatDate(lead.fecha_interaccion)}</span>
                     </div>
                     <div className="flex items-center">
                       <span className="text-sm text-white/50">{lead.actividad_interes || "—"}</span>
@@ -550,6 +610,17 @@ function DelfinaDashboard() {
                 ))
             )}
           </div>
+          {filtered.length > feedLimit && (
+            <div className="pt-4 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setFeedLimit(n => n + FEED_PAGE)}
+                className="px-4 py-2 rounded-xl text-xs font-medium tabular-nums border bg-white/[0.03] border-white/[0.08] text-white/60 hover:bg-white/[0.06] hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition-colors cursor-pointer"
+              >
+                Ver {Math.min(FEED_PAGE, filtered.length - feedLimit)} más ({(filtered.length - feedLimit).toLocaleString("es-AR")} restantes)
+              </button>
+            </div>
+          )}
         </div>
 
         <p className="text-center text-[11px] text-white/15 font-mono">Powerglide AI · Delfina v4 · {SUPABASE_READY ? "Supabase Live" : "Demo Mode"}</p>
