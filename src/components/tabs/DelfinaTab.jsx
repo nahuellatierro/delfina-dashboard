@@ -40,8 +40,8 @@ function DelfinaTab({ m, clasesPrueba }) {
                 <YAxis tick={{ fill: C.textDim, fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip content={<ChartTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }} />
-                <Bar dataKey="recibidos" name="Mensajes" fill={C.blue} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="respuestas" name="Respuestas" fill={C.accent} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="recibidos" name="Mensajes" fill={C.blue} radius={[4, 4, 0, 0]} maxBarSize={36} />
+                <Bar dataKey="respuestas" name="Respuestas" fill={C.accent} radius={[4, 4, 0, 0]} maxBarSize={36} />
               </BarChart>
             </ResponsiveContainer>
           ) : <SinDatos alto="h-[230px]">Sin mensajes en el período</SinDatos>}

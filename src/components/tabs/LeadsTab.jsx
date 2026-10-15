@@ -164,7 +164,7 @@ function LeadsTab({ leads }) {
               <XAxis dataKey="dia" tick={{ fill: C.textDim, fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: C.textDim, fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="leads" fill={C.accent} radius={[6, 6, 0, 0]} name="Leads" />
+              <Bar dataKey="leads" fill={C.accent} radius={[6, 6, 0, 0]} name="Leads" maxBarSize={48} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
