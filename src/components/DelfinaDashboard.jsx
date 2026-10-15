@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, CartesianGrid,
@@ -11,7 +11,7 @@ const SUPABASE_READY = true;  // Cambiar a false para volver al modo demo
 // Supabase devuelve como máximo 1.000 filas por consulta: se pide de a páginas.
 const PAGE_SIZE = 1000;
 const LEAD_COLUMNS = "user_id,user_name,total_mensajes,ultimo_mensaje,fecha_interaccion,origen_lead,actividad_interes,tema_derivacion,estado_calificacion,canal";
-const FEED_PAGE = 100;
+const FEED_PAGE = 25;
 
 const ESTADOS = ["Calificado", "En proceso", "Sin respuesta", "No califica"];
 
@@ -23,7 +23,7 @@ const C = {
   gridLine: "rgba(255,255,255,0.06)",
 };
 const ACT_COLORS = [C.accent, C.blue, C.orange, C.purple, C.cyan];
-const DERIV_COLORS = [C.red, C.orange, C.yellow, C.blue, C.purple];
+const DERIV_COLORS = [C.blue, C.cyan, C.purple, C.slate, C.yellow];
 
 // ── Fallback (modo demo) ─────────────────────────────────────────
 const FALLBACK = [
@@ -108,6 +108,14 @@ async function fetchAllLeads() {
   }
 }
 
+function normalizar(texto) {
+  return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function formatHora(date) {
+  return date.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+}
+
 function canalLabel(raw) {
   return raw === "instagram" ? "Instagram" : "WhatsApp";
 }
@@ -132,7 +140,7 @@ function KPI({ label, value, sub, accent = false }) {
       {accent && <div className="absolute -top-8 -right-8 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />}
       <span className="text-[11px] uppercase tracking-[1.5px] text-white/40 font-mono relative z-10">{label}</span>
       <span className={`text-3xl font-bold leading-none relative z-10 ${accent ? "text-emerald-400" : "text-white/90"}`}>{value}</span>
-      {sub && <span className="text-xs text-white/25 relative z-10">{sub}</span>}
+      {sub && <span className="text-xs text-white/50 relative z-10">{sub}</span>}
     </div>
   );
 }
@@ -203,6 +211,10 @@ function DelfinaDashboard({ email, onSignOut }) {
   const [origenFilter, setOrigenFilter] = useState("todos");
   const [canalFilter, setCanalFilter] = useState("todos");
   const [feedLimit, setFeedLimit] = useState(FEED_PAGE);
+  const [search, setSearch] = useState("");
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const feedRef = useRef(null);
 
   // Si una recarga falla, se conservan los datos anteriores y se avisa.
   // Nunca se muestran datos de demo como si fueran reales.
@@ -228,13 +240,17 @@ function DelfinaDashboard({ email, onSignOut }) {
         estado_calificacion: cleanEstado(row.estado_calificacion),
       })));
       setError(null);
+      setLastUpdated(new Date());
     } catch (err) {
       console.error("Supabase error:", err);
       setError(err.message || "No se pudieron cargar los datos");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
+
+  const refresh = () => { setRefreshing(true); fetchData(); };
 
   useEffect(() => {
     // fetchData solo cambia estado después de un await o en un setTimeout.
@@ -248,6 +264,14 @@ function DelfinaDashboard({ email, onSignOut }) {
 
   // Al cambiar un filtro, el feed vuelve a mostrar la primera página.
   const withFeedReset = (setter) => (value) => { setter(value); setFeedLimit(FEED_PAGE); };
+
+  // "Para recontactar": filtra los que no escriben hace más de 7 días y lleva al feed.
+  const verRecontactar = () => {
+    setEstadoFilter("Sin respuesta");
+    setSearch("");
+    setFeedLimit(FEED_PAGE);
+    feedRef.current?.scrollIntoView({ block: "start" });
+  };
 
   // ── Datos filtrados ────────────────────────────────────────────
   const filtered = useMemo(() => {
@@ -274,6 +298,13 @@ function DelfinaDashboard({ email, onSignOut }) {
     return result.sort((a, b) => new Date(b.fecha_interaccion) - new Date(a.fecha_interaccion));
   }, [rawData, dateRange, estadoFilter, origenFilter, canalFilter]);
 
+  // ── Feed: búsqueda por nombre (no cambia KPIs ni gráficos) ─────
+  const feedLeads = useMemo(() => {
+    const q = normalizar(search.trim());
+    if (!q) return filtered;
+    return filtered.filter(r => normalizar(r.user_name || "").includes(q));
+  }, [filtered, search]);
+
   // ── KPIs ───────────────────────────────────────────────────────
   const kpis = useMemo(() => {
     const total = filtered.length;
@@ -282,7 +313,8 @@ function DelfinaDashboard({ email, onSignOut }) {
     const pauta = filtered.filter(r => r.origen_lead === "Pauta publicitaria").length;
     const pautaPct = total > 0 ? Math.round((pauta / total) * 100) : 0;
     const calificados = filtered.filter(r => r.estado_calificacion === "Calificado").length;
-    return { totalMsgs, total, promedio, pautaPct, pauta, calificados };
+    const sinRespuesta = filtered.filter(r => r.estado_calificacion === "Sin respuesta").length;
+    return { totalMsgs, total, promedio, pautaPct, pauta, calificados, sinRespuesta };
   }, [filtered]);
 
   // ── Charts ─────────────────────────────────────────────────────
@@ -323,7 +355,7 @@ function DelfinaDashboard({ email, onSignOut }) {
         <div className="absolute inset-0 rounded-full border-2 border-white/5" />
         <div className="absolute inset-0 rounded-full border-2 border-t-emerald-400 animate-spin" />
       </div>
-      <span role="status" className="text-sm text-white/30 font-mono tracking-wide">Conectando con Delfina...</span>
+      <span role="status" className="text-sm text-white/55 font-mono tracking-wide">Conectando con Delfina...</span>
     </div>
   );
 
@@ -373,13 +405,30 @@ function DelfinaDashboard({ email, onSignOut }) {
               {filtered.length.toLocaleString("es-AR")} leads · {kpis.totalMsgs.toLocaleString("es-AR")} mensajes totales
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onSignOut}
-            className="shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-medium border bg-white/[0.03] border-white/[0.08] text-white/60 hover:bg-white/[0.06] hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition-colors cursor-pointer"
-          >
-            Salir
-          </button>
+          <div className="shrink-0 flex flex-col items-end gap-2">
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={refresh}
+                disabled={refreshing}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-medium border bg-white/[0.03] border-white/[0.08] text-white/70 hover:bg-white/[0.06] hover:text-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition-colors cursor-pointer disabled:cursor-wait disabled:opacity-60"
+              >
+                {refreshing ? "Actualizando…" : "Actualizar"}
+              </button>
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-medium border bg-white/[0.03] border-white/[0.08] text-white/70 hover:bg-white/[0.06] hover:text-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition-colors cursor-pointer"
+              >
+                Salir
+              </button>
+            </div>
+            {lastUpdated && (
+              <span role="status" className="text-[11px] text-white/50 font-mono tabular-nums">
+                Actualizado {formatHora(lastUpdated)}
+              </span>
+            )}
+          </div>
         </header>
 
         {error && (
@@ -392,7 +441,7 @@ function DelfinaDashboard({ email, onSignOut }) {
         <div className={`${glass} p-4 mb-6`}>
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
             <div className="flex flex-col gap-2">
-              <span className="text-[10px] uppercase tracking-[1.5px] text-white/30 font-mono">Período</span>
+              <span className="text-[10px] uppercase tracking-[1.5px] text-white/55 font-mono">Período</span>
               <div className="flex gap-1.5 flex-wrap">
                 {[{ key: "hoy", label: "Hoy" }, { key: "7d", label: "7 días" }, { key: "mes", label: "Este mes" }, { key: "todos", label: "Todos" }].map(f => (
                   <FilterPill key={f.key} label={f.label} active={dateRange === f.key} onClick={() => withFeedReset(setDateRange)(f.key)} />
@@ -400,7 +449,7 @@ function DelfinaDashboard({ email, onSignOut }) {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <span className="text-[10px] uppercase tracking-[1.5px] text-white/30 font-mono">Estado</span>
+              <span className="text-[10px] uppercase tracking-[1.5px] text-white/55 font-mono">Estado</span>
               <div className="flex gap-1.5 flex-wrap">
                 {["todos", ...ESTADOS].map(key => (
                   <FilterPill key={key} label={key === "todos" ? "Todos" : key} active={estadoFilter === key} onClick={() => withFeedReset(setEstadoFilter)(key)} />
@@ -408,7 +457,7 @@ function DelfinaDashboard({ email, onSignOut }) {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <span className="text-[10px] uppercase tracking-[1.5px] text-white/30 font-mono">Canal</span>
+              <span className="text-[10px] uppercase tracking-[1.5px] text-white/55 font-mono">Canal</span>
               <div className="flex gap-1.5 flex-wrap">
                 {[{ key: "todos", label: "Todos" }, { key: "whatsapp", label: "WhatsApp" }, { key: "instagram", label: "Instagram" }].map(f => (
                   <FilterPill key={f.key} label={f.label} active={canalFilter === f.key} onClick={() => withFeedReset(setCanalFilter)(f.key)} />
@@ -416,7 +465,7 @@ function DelfinaDashboard({ email, onSignOut }) {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <span className="text-[10px] uppercase tracking-[1.5px] text-white/30 font-mono">Origen (estimado)</span>
+              <span className="text-[10px] uppercase tracking-[1.5px] text-white/55 font-mono">Origen (estimado)</span>
               <div className="flex gap-1.5 flex-wrap">
                 {[{ key: "todos", label: "Todos" }, { key: "pauta", label: "Pauta" }, { key: "organico", label: "Orgánico" }].map(f => (
                   <FilterPill key={f.key} label={f.label} active={origenFilter === f.key} onClick={() => withFeedReset(setOrigenFilter)(f.key)} />
@@ -486,7 +535,7 @@ function DelfinaDashboard({ email, onSignOut }) {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[200px] flex items-center justify-center text-white/20 text-sm font-mono">Sin datos</div>
+              <div className="h-[200px] flex items-center justify-center text-white/45 text-sm font-mono">Sin datos</div>
             )}
           </Card>
           <Card title="Top derivaciones a recepción (estimado)">
@@ -503,7 +552,7 @@ function DelfinaDashboard({ email, onSignOut }) {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[200px] flex items-center justify-center text-white/20 text-sm font-mono">Sin derivaciones</div>
+              <div className="h-[200px] flex items-center justify-center text-white/45 text-sm font-mono">Sin derivaciones</div>
             )}
           </Card>
         </div>
@@ -526,7 +575,7 @@ function DelfinaDashboard({ email, onSignOut }) {
                     <span className="text-[13px] text-white/70">Orgánico</span>
                   </div>
                   <span className="text-2xl font-bold font-mono text-emerald-400">{orgPct}%</span>
-                  <span className="text-xs text-white/25 ml-2">{filtered.length - kpis.pauta} leads</span>
+                  <span className="text-xs text-white/50 ml-2">{filtered.length - kpis.pauta} leads</span>
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -534,7 +583,7 @@ function DelfinaDashboard({ email, onSignOut }) {
                     <span className="text-[13px] text-white/70">Pauta</span>
                   </div>
                   <span className="text-2xl font-bold font-mono text-orange-400">{kpis.pautaPct}%</span>
-                  <span className="text-xs text-white/25 ml-2">{kpis.pauta} leads</span>
+                  <span className="text-xs text-white/50 ml-2">{kpis.pauta} leads</span>
                 </div>
               </div>
             </div>
@@ -545,41 +594,73 @@ function DelfinaDashboard({ email, onSignOut }) {
             <h3 className="text-[13px] uppercase tracking-[1.5px] text-emerald-400/60 mb-5 font-mono relative z-10">Insights</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 relative z-10">
               <div>
-                <span className="text-xs text-white/30 block mb-1">Actividad estrella</span>
+                <span className="text-xs text-white/55 block mb-1">Actividad estrella</span>
                 <span className="text-base font-semibold text-white/85">{actividadesChart[0]?.name || "—"}</span>
-                <span className="text-[11px] text-white/20 block mt-0.5">{actividadesChart[0] ? `${actividadesChart[0].count} consultas` : ""}</span>
+                <span className="text-[11px] text-white/45 block mt-0.5">{actividadesChart[0] ? `${actividadesChart[0].count} consultas` : ""}</span>
               </div>
               <div>
-                <span className="text-xs text-white/30 block mb-1">Tasa de calificación</span>
+                <span className="text-xs text-white/55 block mb-1">Tasa de calificación</span>
                 <span className="text-base font-semibold text-emerald-400">{filtered.length > 0 ? `${Math.round((kpis.calificados / filtered.length) * 100)}%` : "—"}</span>
                 <span className="text-[11px] text-white/40 block mt-0.5">{kpis.calificados.toLocaleString("es-AR")} de {filtered.length.toLocaleString("es-AR")} leads</span>
               </div>
               <div>
-                <span className="text-xs text-white/30 block mb-1">Derivación top</span>
-                <span className="text-base font-semibold text-red-400/80">{derivacionesChart[0]?.name || "—"}</span>
-                <span className="text-[11px] text-white/20 block mt-0.5">{derivacionesChart[0] ? `${derivacionesChart[0].count} derivaciones` : ""}</span>
+                <span className="text-xs text-white/55 block mb-1">Derivación top (estimado)</span>
+                <span className="text-base font-semibold text-white/85">{derivacionesChart[0]?.name || "—"}</span>
+                <span className="text-[11px] text-white/45 block mt-0.5">{derivacionesChart[0] ? `${derivacionesChart[0].count} derivaciones` : ""}</span>
               </div>
+            </div>
+            <div className="relative z-10 mt-6 pt-5 border-t border-white/[0.06] flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <span className="text-xs text-white/55 block mb-1">Para recontactar</span>
+                <span className="text-2xl font-bold text-slate-300 tabular-nums">{kpis.sinRespuesta.toLocaleString("es-AR")}</span>
+                <span className="text-[11px] text-white/45 block mt-0.5 text-pretty">No cerraron y hace más de 7 días que no escriben</span>
+              </div>
+              {kpis.sinRespuesta > 0 && (
+                <button
+                  type="button"
+                  onClick={verRecontactar}
+                  className="px-3.5 py-1.5 rounded-xl text-xs font-medium border bg-white/[0.03] border-white/[0.08] text-white/70 hover:bg-white/[0.06] hover:text-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition-colors cursor-pointer"
+                >
+                  Ver la lista
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Feed de Leads */}
-        <div className={`${glass} p-6 mb-6`}>
-          <h3 className="text-[13px] uppercase tracking-[1.5px] text-white/40 mb-5 font-mono">
-            Feed de Leads ({filtered.length})
-          </h3>
+        <div ref={feedRef} className={`${glass} p-6 mb-6 scroll-mt-4`}>
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h3 className="text-[13px] uppercase tracking-[1.5px] text-white/40 font-mono tabular-nums">
+              Feed de Leads ({feedLeads.length.toLocaleString("es-AR")})
+            </h3>
+            <div className="sm:w-64">
+              <label htmlFor="buscar-lead" className="sr-only">Buscar lead por nombre</label>
+              <input
+                id="buscar-lead"
+                type="search"
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setFeedLimit(FEED_PAGE); }}
+                placeholder="Buscar por nombre…"
+                autoComplete="off"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-sm text-white/90 placeholder:text-white/40 focus:border-emerald-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+              />
+            </div>
+          </div>
 
           <div className="hidden lg:grid grid-cols-[1fr_0.8fr_0.7fr_0.5fr_0.8fr_1.2fr] gap-3 px-4 pb-3 border-b border-white/[0.06]">
             {["Lead", "Actividad", "Origen", "Msgs", "Estado", "Último contacto"].map(h => (
-              <span key={h} className="text-[10px] uppercase tracking-[1.5px] text-white/25 font-mono">{h}</span>
+              <span key={h} className="text-[10px] uppercase tracking-[1.5px] text-white/50 font-mono">{h}</span>
             ))}
           </div>
 
-          <div className="max-h-[400px] overflow-y-auto pr-1" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.08) transparent" }}>
-            {filtered.length === 0 ? (
-              <div className="py-12 text-center text-white/40 text-sm font-mono">No hay leads para los filtros seleccionados</div>
+          <div>
+            {feedLeads.length === 0 ? (
+              <div className="py-12 text-center text-white/40 text-sm font-mono">
+                {search.trim() ? `Ningún lead coincide con "${search.trim()}" en estos filtros` : "No hay leads para los filtros seleccionados"}
+              </div>
             ) : (
-              filtered
+              feedLeads
                 .slice(0, feedLimit)
                 .map((lead, i) => (
                   <div key={lead.user_id + i} className="grid grid-cols-1 lg:grid-cols-[1fr_0.8fr_0.7fr_0.5fr_0.8fr_1.2fr] gap-2 lg:gap-3 px-4 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
@@ -603,27 +684,27 @@ function DelfinaDashboard({ email, onSignOut }) {
                       <Badge status={lead.estado_calificacion} />
                     </div>
                     <div className="hidden lg:flex flex-col justify-center">
-                      <span className="text-xs text-white/30 font-mono">{formatDate(lead.fecha_interaccion)}</span>
-                      <span className="text-[11px] text-white/15 truncate max-w-[200px]">{lead.ultimo_mensaje}</span>
+                      <span className="text-xs text-white/55 font-mono">{formatDate(lead.fecha_interaccion)}</span>
+                      <span className="text-[11px] text-white/45 truncate max-w-[200px]">{lead.ultimo_mensaje}</span>
                     </div>
                   </div>
                 ))
             )}
           </div>
-          {filtered.length > feedLimit && (
+          {feedLeads.length > feedLimit && (
             <div className="pt-4 flex justify-center">
               <button
                 type="button"
                 onClick={() => setFeedLimit(n => n + FEED_PAGE)}
                 className="px-4 py-2 rounded-xl text-xs font-medium tabular-nums border bg-white/[0.03] border-white/[0.08] text-white/60 hover:bg-white/[0.06] hover:text-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 transition-colors cursor-pointer"
               >
-                Ver {Math.min(FEED_PAGE, filtered.length - feedLimit)} más ({(filtered.length - feedLimit).toLocaleString("es-AR")} restantes)
+                Ver {Math.min(FEED_PAGE, feedLeads.length - feedLimit)} más ({(feedLeads.length - feedLimit).toLocaleString("es-AR")} restantes)
               </button>
             </div>
           )}
         </div>
 
-        <p className="text-center text-[11px] text-white/15 font-mono">Powerglide AI · Delfina v4 · {SUPABASE_READY ? "Supabase Live" : "Demo Mode"}</p>
+        <p className="text-center text-[11px] text-white/45 font-mono">Powerglide AI · Delfina v4 · {SUPABASE_READY ? "Supabase Live" : "Demo Mode"}</p>
       </div>
     </div>
   );
