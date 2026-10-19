@@ -40,6 +40,11 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
 - Desde el 16/10 los precios de agosto valen como vigentes hasta que Beto pase precios nuevos: Delfina los pasa sin
   decir que son de agosto ni mandar a recepción por precios. Cuando cambien, actualizar los dos prompts y la fila
   `metodos_pago` de `Info_General` (y la pestaña `Precios`).
+- Desde el 19/10 ManyChat está en Pro 2.500 (US$25/mes): en el plan viejo el tramo sube y baja solo con el total de
+  contactos con opt-in. Por pedido de Beto, los inactivos se **borran** (no se desuscriben) todos los meses con los
+  segmentos "Limpieza 2" y "Limpieza 3". El borrado lo hace Nano a mano. Después, cargar el número de Billing en la
+  tabla `manychat_limpiezas`: el reporte de Telegram estima el contador con esa tabla y avisa cuando toca limpiar
+  (`docs/03-manychat.md`, `docs/12-reportes-delfina.md`).
 - Boxeo y CrossFit no tienen clase de prueba (en los dos prompts) hasta que Beto diga lo contrario.
 - En el gym no hay tatami: boxeo se hace con zapatillas y kickboxing descalzo. Está en los dos prompts y en la pestaña
   `Info_General` del Sheet (desde el 07/10). Delfina repite lo que diga el Sheet, así que un dato de negocio se
