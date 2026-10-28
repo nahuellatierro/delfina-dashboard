@@ -45,6 +45,9 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   segmentos "Limpieza 2" y "Limpieza 3". El borrado lo hace Nano a mano. Después, cargar el número de Billing en la
   tabla `manychat_limpiezas`: el reporte de Telegram estima el contador con esa tabla y avisa cuando toca limpiar
   (`docs/03-manychat.md`, `docs/12-reportes-delfina.md`).
+- Desde el 27/10 hay un plan de difusión de ManyChat a ex socios (Excel `no renovados.xlsx`, con datos personales: no
+  se sube al repo) esperando las respuestas de Beto. No importar contactos, crear plantillas ni tocar los prompts para
+  la difusión hasta que las dé. Detalle y pendientes en `docs/18-difusion-ex-socios.md`.
 - Boxeo y CrossFit no tienen clase de prueba (en los dos prompts) hasta que Beto diga lo contrario.
 - En el gym no hay tatami: boxeo se hace con zapatillas y kickboxing descalzo. Está en los dos prompts y en la pestaña
   `Info_General` del Sheet (desde el 07/10). Delfina repite lo que diga el Sheet, así que un dato de negocio se

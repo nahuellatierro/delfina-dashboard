@@ -23,5 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Listas de contactos con datos personales de socios. NUNCA subir: repo público.
+no renovados*.xlsx
+no renovados*.csv
+
 # Documentación operativa interna (URLs de webhooks, IDs, prompts). NUNCA subir: repo público.
 docs/
