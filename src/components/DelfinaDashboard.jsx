@@ -9,6 +9,7 @@ import { FilterPill, FilterGroup, Nota } from "./ui";
 import LeadsTab from "./tabs/LeadsTab";
 import QuejasTab from "./tabs/QuejasTab";
 import DelfinaTab from "./tabs/DelfinaTab";
+import DifusionTab from "./tabs/DifusionTab";
 
 const SUPABASE_READY = true;  // Cambiar a false para volver al modo demo
 
@@ -20,7 +21,11 @@ const TABS = [
   { key: "leads", label: "Leads" },
   { key: "quejas", label: "Quejas" },
   { key: "delfina", label: "Delfina" },
+  { key: "difusion", label: "Difusión" },
 ];
+
+// La difusión a ex socios cierra el 01/11/2026: hasta entonces los resultados son parciales
+const DIFUSION_CIERRE = new Date(2026, 10, 2);
 
 /* Normaliza el estado que viene de Supabase a la versión que usa el dashboard */
 function cleanEstado(raw) {
@@ -76,6 +81,10 @@ function DelfinaDashboard({ email, onSignOut }) {
   const [metricas, setMetricas] = useState({});
   const [metricasError, setMetricasError] = useState(null);
 
+  // Difusión a ex socios (función dashboard_difusion), también guardada por período
+  const [difusion, setDifusion] = useState({});
+  const [difusionError, setDifusionError] = useState(null);
+
   // Si una recarga falla, se conservan los datos anteriores y se avisa.
   // Nunca se muestran datos de demo como si fueran reales.
   // Solo cambia estado después de esperar la respuesta (puede correr desde un efecto).
@@ -129,9 +138,29 @@ function DelfinaDashboard({ email, onSignOut }) {
     setMetricas(prev => ({ ...prev, [key]: data }));
   }, []);
 
+  const cargarDifusion = useCallback(async (key) => {
+    if (!SUPABASE_READY) {
+      setTimeout(() => setDifusion(prev => ({ ...prev, [key]: null })), 300);
+      return;
+    }
+    const { desde, hasta } = rangoDe(key);
+    const { data, error: rpcError } = await supabase.rpc("dashboard_difusion", {
+      p_desde: desde ? desde.toISOString() : null,
+      p_hasta: hasta ? hasta.toISOString() : null,
+    });
+    if (rpcError) {
+      console.error("Supabase error (difusión):", rpcError);
+      setDifusionError(rpcError.message || "No se pudo cargar la difusión");
+      return;
+    }
+    setDifusionError(null);
+    setDifusion(prev => ({ ...prev, [key]: data }));
+  }, []);
+
   const refresh = () => {
     setRefreshing(true);
     setMetricas({});
+    setDifusion({});
     fetchData();
   };
 
@@ -140,19 +169,28 @@ function DelfinaDashboard({ email, onSignOut }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
     if (SUPABASE_READY) {
-      const id = setInterval(() => { setMetricas({}); fetchData(); }, 5 * 60 * 1000);
+      const id = setInterval(() => { setMetricas({}); setDifusion({}); fetchData(); }, 5 * 60 * 1000);
       return () => clearInterval(id);
     }
   }, []);
 
   // Quejas y Delfina: se piden al entrar a la pestaña o cambiar de período (una vez por período)
   useEffect(() => {
-    if (tab !== "leads" && !sinAcceso && !(periodo in metricas)) {
+    if ((tab === "quejas" || tab === "delfina") && !sinAcceso && !(periodo in metricas)) {
       // cargarMetricas solo cambia estado después de un await o en un setTimeout.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       cargarMetricas(periodo);
     }
   }, [tab, periodo, metricas, sinAcceso, cargarMetricas]);
+
+  // Difusión: igual, una vez por período al entrar a la pestaña
+  useEffect(() => {
+    if (tab === "difusion" && !sinAcceso && !(periodo in difusion)) {
+      // cargarDifusion solo cambia estado después de un await o en un setTimeout.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      cargarDifusion(periodo);
+    }
+  }, [tab, periodo, difusion, sinAcceso, cargarDifusion]);
 
   const cambiarTab = (key) => {
     setTab(key);
@@ -170,6 +208,7 @@ function DelfinaDashboard({ email, onSignOut }) {
   );
 
   const m = metricas[periodo];
+  const d = difusion[periodo];
 
   // ── Loading / Error ────────────────────────────────────────────
   if (loading) return (
@@ -298,6 +337,27 @@ function DelfinaDashboard({ email, onSignOut }) {
             <DelfinaTab m={mm.delfina || {}} clasesPrueba={mm.clases_prueba?.total} />
           </>
         ))}
+
+        {tab === "difusion" && (
+          d ? (
+            <>
+              {new Date() < DIFUSION_CIERRE && (
+                <Nota tone="alerta">
+                  Resultados parciales: el precio especial vence el sábado 31 y las respuestas siguen entrando. Cierre el 01/11.
+                </Nota>
+              )}
+              {periodo !== "todos" && (
+                <Nota>Enviados y entregados son de toda la difusión; el resto se filtra por la fecha del último mensaje.</Nota>
+              )}
+              <DifusionTab m={d} />
+            </>
+          ) : difusionError ? (
+            <Nota tone="error">
+              No se pudieron cargar los datos ({difusionError}).{" "}
+              <button type="button" onClick={() => { setDifusionError(null); cargarDifusion(periodo); }} className="underline underline-offset-2 cursor-pointer">Reintentar</button>
+            </Nota>
+          ) : d === null ? <Nota>Sin datos en modo demo.</Nota> : <Nota>Cargando…</Nota>
+        )}
 
         <p className="text-center text-[11px] text-white/45 font-mono">Powerglide AI · Delfina v4 · {SUPABASE_READY ? "Supabase Live" : "Demo Mode"}</p>
       </div>
