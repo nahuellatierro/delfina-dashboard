@@ -10,6 +10,7 @@ const FEED_PAGE = 30;
 const INTENCION = {
   quiere_volver: { label: "Quiere volver", cls: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" },
   volvera_mas_adelante: { label: "Volverá más adelante", cls: "bg-blue-400/10 border-blue-400/20 text-blue-400" },
+  dio_motivo: { label: "Dio un motivo", cls: "bg-yellow-500/10 border-yellow-500/20 text-yellow-400" },
   no_vuelve: { label: "No vuelve", cls: "bg-red-500/10 border-red-500/20 text-red-400" },
   pidio_baja: { label: "Pidió la baja", cls: "bg-red-500/10 border-red-500/20 text-red-400" },
   ya_renovo: { label: "Ya renovó", cls: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" },
@@ -30,7 +31,7 @@ const SEGUIMIENTO = {
   volvio: { label: "Volvió", cls: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" },
 };
 
-const FILTROS_INTENCION = ["quiere_volver", "volvera_mas_adelante", "no_vuelve", "pidio_baja", "solo_agradece"];
+const FILTROS_INTENCION = ["quiere_volver", "volvera_mas_adelante", "dio_motivo", "no_vuelve", "pidio_baja", "solo_agradece"];
 
 const intencionLabel = (k) => INTENCION[k]?.label || k || "—";
 const motivoLabel = (k) => MOTIVO[k] || k || "—";
