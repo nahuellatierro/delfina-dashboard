@@ -68,17 +68,23 @@ function celularCsv(numero) {
   return d;
 }
 
-function descargarCsv(filas) {
-  const cols = ["Nombre", "Celular", "Segmento", "Qué dijo", "Cita", "Último mensaje"];
+// completo=false: lista de "quieren volver". completo=true: agrega intención, motivo y queja (para lo filtrado).
+function descargarCsv(filas, archivo, completo = false) {
+  const cols = ["Nombre", "Celular", "Segmento"]
+    .concat(completo ? ["Intención", "Motivo", "Queja"] : [])
+    .concat(["Qué dijo", "Cita", "Último mensaje"]);
   const lineas = [cols.map(celdaCsv).join(",")].concat(
-    filas.map(f => [f.nombre, celularCsv(f.celular), f.segmento, f.resumen, f.cita, formatDate(f.ultimo_mensaje_at)].map(celdaCsv).join(","))
+    filas.map(f => [f.nombre, celularCsv(f.celular), f.segmento]
+      .concat(completo ? [intencionLabel(f.intencion), motivoLabel(f.motivo), f.tema_queja] : [])
+      .concat([f.resumen, f.cita, formatDate(f.ultimo_mensaje_at)])
+      .map(celdaCsv).join(","))
   );
   // BOM para que Excel respete las tildes
   const blob = new Blob(["﻿" + lineas.join("\r\n")], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "quieren-volver-difusion.csv";
+  a.download = archivo;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -153,7 +159,7 @@ function DifusionTab({ m }) {
             Quieren volver ({fmt(quierenVolver.length)})
           </h3>
           {quierenVolver.length > 0 && (
-            <button type="button" onClick={() => descargarCsv(quierenVolver)} className={`${btnSecundario} self-start sm:self-auto`}>
+            <button type="button" onClick={() => descargarCsv(quierenVolver, "quieren-volver-difusion.csv")} className={`${btnSecundario} self-start sm:self-auto`}>
               Descargar CSV
             </button>
           )}
@@ -226,6 +232,12 @@ function DifusionTab({ m }) {
           <h3 className="text-[13px] uppercase tracking-[1.5px] text-white/40 font-mono tabular-nums">
             Todas las respuestas ({fmt(visibles.length)})
           </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            {visibles.length > 0 && (
+              <button type="button" onClick={() => descargarCsv(visibles, "respuestas-difusion.csv", true)} className={`${btnSecundario} tabular-nums`}>
+                Descargar CSV ({fmt(visibles.length)})
+              </button>
+            )}
           <div className="sm:w-64">
             <label htmlFor="buscar-difusion" className="sr-only">Buscar por nombre o celular</label>
             <input
@@ -237,6 +249,7 @@ function DifusionTab({ m }) {
               autoComplete="off"
               className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-2 text-sm text-white/90 placeholder:text-white/40 focus:border-emerald-500/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
             />
+          </div>
           </div>
         </div>
 
