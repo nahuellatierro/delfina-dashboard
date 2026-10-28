@@ -61,10 +61,17 @@ function celdaCsv(valor) {
   return `"${s.replace(/"/g, '""')}"`;
 }
 
+// Celular para el CSV: "54 9 11 6643-6388". Sin "+" adelante, así Excel lo deja como texto y no lo toma por fórmula.
+function celularCsv(numero) {
+  const d = String(numero || "").replace(/\D/g, "");
+  if (/^549\d{10}$/.test(d)) return `${d.slice(0, 2)} ${d.slice(2, 3)} ${d.slice(3, 5)} ${d.slice(5, 9)}-${d.slice(9)}`;
+  return d;
+}
+
 function descargarCsv(filas) {
   const cols = ["Nombre", "Celular", "Segmento", "Qué dijo", "Cita", "Último mensaje"];
   const lineas = [cols.map(celdaCsv).join(",")].concat(
-    filas.map(f => [f.nombre, f.celular, f.segmento, f.resumen, f.cita, formatDate(f.ultimo_mensaje_at)].map(celdaCsv).join(","))
+    filas.map(f => [f.nombre, celularCsv(f.celular), f.segmento, f.resumen, f.cita, formatDate(f.ultimo_mensaje_at)].map(celdaCsv).join(","))
   );
   // BOM para que Excel respete las tildes
   const blob = new Blob(["﻿" + lineas.join("\r\n")], { type: "text/csv;charset=utf-8" });
