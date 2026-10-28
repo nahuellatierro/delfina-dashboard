@@ -45,9 +45,17 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   segmentos "Limpieza 2" y "Limpieza 3". El borrado lo hace Nano a mano. Después, cargar el número de Billing en la
   tabla `manychat_limpiezas`: el reporte de Telegram estima el contador con esa tabla y avisa cuando toca limpiar
   (`docs/03-manychat.md`, `docs/12-reportes-delfina.md`).
-- Desde el 27/10 hay un plan de difusión de ManyChat a ex socios (Excel `no renovados.xlsx`, con datos personales: no
-  se sube al repo) esperando las respuestas de Beto. No importar contactos, crear plantillas ni tocar los prompts para
-  la difusión hasta que las dé. Detalle y pendientes en `docs/18-difusion-ex-socios.md`.
+- Desde el 28/10 hay una difusión de ManyChat a ex socios en marcha (Excel `no renovados.xlsx` y el CSV de la lista, con
+  datos personales: no se suben al repo). Se envió el 28/10 a 431 contactos; el workflow de WhatsApp lee el tag
+  `difusion_exsocios_2026_10` y le suma a Delfina un aviso (se apaga solo el 02/11). Los dos prompts tienen la oferta
+  del Pase Full a $37.900 hasta el 31/10: **al terminar la difusión sacar esa sección de los prompts** y los dos nodos
+  nuevos. No mandar nada a Beto sin OK de Nano. Detalle y pendientes en `docs/18-difusion-ex-socios.md`.
+- Desde el 28/10 el dashboard tiene la pestaña **Difusión** (`#difusion`, `DifusionTab.jsx`): muestra nombre y celular de
+  los ex socios que respondieron, así que solo se ve con login y `dashboard_acceso`. Lee `dashboard_difusion()` y la tabla
+  `difusion_respuestas`, que llena el workflow `GymBox - Clasificador Difusion` de n8n (cada 30 min hasta el 03/11; no manda
+  mensajes). Si se cambian intenciones o motivos, cambiar a la vez el prompt del clasificador, el `check` de la tabla y las
+  etiquetas de `DifusionTab.jsx` (`docs/19-desglose-difusion.md`). El CSV descargado tiene datos personales: no va al repo.
+  Se despliega desde una copia limpia del commit, no desde la carpeta de trabajo (tiene archivos sueltos con datos).
 - Boxeo y CrossFit no tienen clase de prueba (en los dos prompts) hasta que Beto diga lo contrario.
 - En el gym no hay tatami: boxeo se hace con zapatillas y kickboxing descalzo. Está en los dos prompts y en la pestaña
   `Info_General` del Sheet (desde el 07/10). Delfina repite lo que diga el Sheet, así que un dato de negocio se
