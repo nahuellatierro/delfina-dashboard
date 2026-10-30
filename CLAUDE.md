@@ -56,7 +56,10 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   mensajes). Si se cambian intenciones o motivos, cambiar a la vez el prompt del clasificador, el `check` de la tabla y las
   etiquetas de `DifusionTab.jsx` (`docs/19-desglose-difusion.md`). El CSV descargado tiene datos personales: no va al repo.
   Se despliega desde una copia limpia del commit, no desde la carpeta de trabajo (tiene archivos sueltos con datos).
-- Boxeo y CrossFit no tienen clase de prueba (en los dos prompts) hasta que Beto diga lo contrario.
+- Desde el 30/10 todas las actividades tienen clase de prueba, incluidas Boxeo y CrossFit (Beto lo avisó). Está en los dos
+  prompts y en `Info_General` (`clase_prueba`) del Sheet. Antes, esas dos no tenían. Plan de la promo de noviembre y de los
+  precios nuevos del 02/11 en `docs/20-plan-promo-noviembre.md`. **Pendiente: el domingo 01/11 ejecutar ese plan** (precios nuevos
+  con fecha, Promo Noviembre $38.900, sacar la difusión); si ya pasó esa fecha y no está hecho, hacerlo primero.
 - En el gym no hay tatami: boxeo se hace con zapatillas y kickboxing descalzo. Está en los dos prompts y en la pestaña
   `Info_General` del Sheet (desde el 07/10). Delfina repite lo que diga el Sheet, así que un dato de negocio se
   corrige en el Sheet además del prompt.
