@@ -45,7 +45,21 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   segmentos "Limpieza 2" y "Limpieza 3". El borrado lo hace Nano a mano. Después, cargar el número de Billing en la
   tabla `manychat_limpiezas`: el reporte de Telegram estima el contador con esa tabla y avisa cuando toca limpiar
   (`docs/03-manychat.md`, `docs/12-reportes-delfina.md`).
-- Boxeo y CrossFit no tienen clase de prueba (en los dos prompts) hasta que Beto diga lo contrario.
+- Desde el 28/10 hay una difusión de ManyChat a ex socios en marcha (Excel `no renovados.xlsx` y el CSV de la lista, con
+  datos personales: no se suben al repo). Se envió el 28/10 a 431 contactos; el workflow de WhatsApp lee el tag
+  `difusion_exsocios_2026_10` y le suma a Delfina un aviso (se apaga solo el 02/11). Los dos prompts tienen la oferta
+  del Pase Full a $37.900 hasta el 31/10: **al terminar la difusión sacar esa sección de los prompts** y los dos nodos
+  nuevos. No mandar nada a Beto sin OK de Nano. Detalle y pendientes en `docs/18-difusion-ex-socios.md`.
+- Desde el 28/10 el dashboard tiene la pestaña **Difusión** (`#difusion`, `DifusionTab.jsx`): muestra nombre y celular de
+  los ex socios que respondieron, así que solo se ve con login y `dashboard_acceso`. Lee `dashboard_difusion()` y la tabla
+  `difusion_respuestas`, que llena el workflow `GymBox - Clasificador Difusion` de n8n (cada 30 min hasta el 03/11; no manda
+  mensajes). Si se cambian intenciones o motivos, cambiar a la vez el prompt del clasificador, el `check` de la tabla y las
+  etiquetas de `DifusionTab.jsx` (`docs/19-desglose-difusion.md`). El CSV descargado tiene datos personales: no va al repo.
+  Se despliega desde una copia limpia del commit, no desde la carpeta de trabajo (tiene archivos sueltos con datos).
+- Desde el 30/10 todas las actividades tienen clase de prueba, incluidas Boxeo y CrossFit (Beto lo avisó). Está en los dos
+  prompts y en `Info_General` (`clase_prueba`) del Sheet. Antes, esas dos no tenían. Plan de la promo de noviembre y de los
+  precios nuevos del 02/11 en `docs/20-plan-promo-noviembre.md`. **Pendiente: el domingo 01/11 ejecutar ese plan** (precios nuevos
+  con fecha, Promo Noviembre $38.900, sacar la difusión); si ya pasó esa fecha y no está hecho, hacerlo primero.
 - En el gym no hay tatami: boxeo se hace con zapatillas y kickboxing descalzo. Está en los dos prompts y en la pestaña
   `Info_General` del Sheet (desde el 07/10). Delfina repite lo que diga el Sheet, así que un dato de negocio se
   corrige en el Sheet además del prompt.
