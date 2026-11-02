@@ -40,8 +40,8 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
 - Desde el 02/11 rigen los precios nuevos: los dos prompts tienen dos bloques con fecha (hasta 01/11 y desde 02/11) y
   Delfina los pasa como vigentes, sin mandar a recepción por precios. Cuando cambien de nuevo, actualizar los dos prompts
   y la fila `metodos_pago` de `Info_General` (y la pestaña `Precios`). `metodos_pago` y `Precios` del Sheet ya están actualizados (02/11); la pestaña `Promos` quedó sin tocar (Delfina no la lee).
-- Promo Noviembre (02 al 30/11): Pase Full $38.900 para quien no pagó en los últimos 3 meses, en los dos prompts. **El
-  30/11 sacarla de los dos prompts.** Detalle de lo hecho en `docs/20-plan-promo-noviembre.md`.
+- La Promo Noviembre ($38.900, 02 al 30/11) terminó y se sacó de los dos prompts (`docs/20-plan-promo-noviembre.md`). Si hay una
+  promo nueva, agregarla a los dos prompts con fecha de fin.
 - Desde el 19/10 ManyChat está en Pro 2.500 (US$25/mes): en el plan viejo el tramo sube y baja solo con el total de
   contactos con opt-in. Por pedido de Beto, los inactivos se **borran** (no se desuscriben) todos los meses con los
   segmentos "Limpieza 2" y "Limpieza 3". El borrado lo hace Nano a mano. Después, cargar el número de Billing en la
