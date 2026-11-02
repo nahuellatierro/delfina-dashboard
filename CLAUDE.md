@@ -37,19 +37,21 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   charla a Delfina cuando el seguidor toca "Info": manda un mensaje fijo con un `[Aviso del sistema: seguidor nuevo ...]`
   que el prompt de IG sabe tratar. Si se cambia ese texto en ManyChat, cambiar también la regla del prompt de IG (y al
   revés). Ya no se pide el WhatsApp en ese flow. Detalle en `docs/03-manychat.md`.
-- Desde el 16/10 los precios de agosto valen como vigentes hasta que Beto pase precios nuevos: Delfina los pasa sin
-  decir que son de agosto ni mandar a recepción por precios. Cuando cambien, actualizar los dos prompts y la fila
-  `metodos_pago` de `Info_General` (y la pestaña `Precios`).
+- Desde el 02/11 rigen los precios nuevos: los dos prompts tienen dos bloques con fecha (hasta 01/11 y desde 02/11) y
+  Delfina los pasa como vigentes, sin mandar a recepción por precios. Cuando cambien de nuevo, actualizar los dos prompts
+  y la fila `metodos_pago` de `Info_General` (y la pestaña `Precios`). **Pendiente: Nano debe cargar los precios nuevos en
+  `metodos_pago` del Sheet** (todavía tiene los de agosto; valores en `docs/sheets/info-general.backup-2026-11-02.md`).
+- Promo Noviembre (02 al 30/11): Pase Full $38.900 para quien no pagó en los últimos 3 meses, en los dos prompts. **El
+  30/11 sacarla de los dos prompts.** Detalle de lo hecho en `docs/20-plan-promo-noviembre.md`.
 - Desde el 19/10 ManyChat está en Pro 2.500 (US$25/mes): en el plan viejo el tramo sube y baja solo con el total de
   contactos con opt-in. Por pedido de Beto, los inactivos se **borran** (no se desuscriben) todos los meses con los
   segmentos "Limpieza 2" y "Limpieza 3". El borrado lo hace Nano a mano. Después, cargar el número de Billing en la
   tabla `manychat_limpiezas`: el reporte de Telegram estima el contador con esa tabla y avisa cuando toca limpiar
   (`docs/03-manychat.md`, `docs/12-reportes-delfina.md`).
 - Desde el 28/10 hay una difusión de ManyChat a ex socios en marcha (Excel `no renovados.xlsx` y el CSV de la lista, con
-  datos personales: no se suben al repo). Se envió el 28/10 a 431 contactos; el workflow de WhatsApp lee el tag
-  `difusion_exsocios_2026_10` y le suma a Delfina un aviso (se apaga solo el 02/11). Los dos prompts tienen la oferta
-  del Pase Full a $37.900 hasta el 31/10: **al terminar la difusión sacar esa sección de los prompts** y los dos nodos
-  nuevos. No mandar nada a Beto sin OK de Nano. Detalle y pendientes en `docs/18-difusion-ex-socios.md`.
+  datos personales: no se suben al repo). Se envió el 28/10 a 431 contactos. Terminó: el 02/11 se sacó la oferta de $37.900
+  de los prompts y los nodos `Leer Tags` / `Aviso Difusion` de WhatsApp. No mandar nada a Beto sin OK de Nano. Detalle en
+  `docs/18-difusion-ex-socios.md`.
 - Desde el 28/10 el dashboard tiene la pestaña **Difusión** (`#difusion`, `DifusionTab.jsx`): muestra nombre y celular de
   los ex socios que respondieron, así que solo se ve con login y `dashboard_acceso`. Lee `dashboard_difusion()` y la tabla
   `difusion_respuestas`, que llena el workflow `GymBox - Clasificador Difusion` de n8n (cada 30 min hasta el 03/11; no manda
@@ -58,8 +60,8 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   Se despliega desde una copia limpia del commit, no desde la carpeta de trabajo (tiene archivos sueltos con datos).
 - Desde el 30/10 todas las actividades tienen clase de prueba, incluidas Boxeo y CrossFit (Beto lo avisó). Está en los dos
   prompts y en `Info_General` (`clase_prueba`) del Sheet. Antes, esas dos no tenían. Plan de la promo de noviembre y de los
-  precios nuevos del 02/11 en `docs/20-plan-promo-noviembre.md`. **Pendiente: el domingo 01/11 ejecutar ese plan** (precios nuevos
-  con fecha, Promo Noviembre $38.900, sacar la difusión); si ya pasó esa fecha y no está hecho, hacerlo primero.
+  precios nuevos del 02/11 en `docs/20-plan-promo-noviembre.md` (ejecutado el 02/11; faltan las pruebas con Gemini real y revisar
+  ManyChat).
 - En el gym no hay tatami: boxeo se hace con zapatillas y kickboxing descalzo. Está en los dos prompts y en la pestaña
   `Info_General` del Sheet (desde el 07/10). Delfina repite lo que diga el Sheet, así que un dato de negocio se
   corrige en el Sheet además del prompt.
