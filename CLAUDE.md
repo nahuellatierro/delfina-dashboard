@@ -39,8 +39,7 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   revés). Ya no se pide el WhatsApp en ese flow. Detalle en `docs/03-manychat.md`.
 - Desde el 02/11 rigen los precios nuevos: los dos prompts tienen dos bloques con fecha (hasta 01/11 y desde 02/11) y
   Delfina los pasa como vigentes, sin mandar a recepción por precios. Cuando cambien de nuevo, actualizar los dos prompts
-  y la fila `metodos_pago` de `Info_General` (y la pestaña `Precios`). **Pendiente: Nano debe cargar los precios nuevos en
-  `metodos_pago` del Sheet** (todavía tiene los de agosto; valores en `docs/sheets/info-general.backup-2026-11-02.md`).
+  y la fila `metodos_pago` de `Info_General` (y la pestaña `Precios`). `metodos_pago` y `Precios` del Sheet ya están actualizados (02/11); la pestaña `Promos` quedó sin tocar (Delfina no la lee).
 - Promo Noviembre (02 al 30/11): Pase Full $38.900 para quien no pagó en los últimos 3 meses, en los dos prompts. **El
   30/11 sacarla de los dos prompts.** Detalle de lo hecho en `docs/20-plan-promo-noviembre.md`.
 - Desde el 19/10 ManyChat está en Pro 2.500 (US$25/mes): en el plan viejo el tramo sube y baja solo con el total de
