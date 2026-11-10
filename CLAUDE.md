@@ -52,6 +52,12 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   segmentos "Limpieza 2" y "Limpieza 3". El borrado lo hace Nano a mano. Después, cargar el número de Billing en la
   tabla `manychat_limpiezas`: el reporte de Telegram estima el contador con esa tabla y avisa cuando toca limpiar
   (`docs/03-manychat.md`, `docs/12-reportes-delfina.md`).
+  **10/11:** el contador había pasado el tope (2.623/5.000, US$45); Nano borró Limpieza 2 y 3 y bajó a Pro 2.500
+  (US$25), **2.158/2.500**. Ese número **no se cargó** en `manychat_limpiezas` (el MCP de Supabase de esta cuenta no tiene
+  permiso sobre el proyecto de GymBox; Nano dijo que no hace falta): la última fila de la tabla sigue siendo la del 31/10
+  (2.265) y el reporte de Telegram puede estimar de más. Para ver el contador real: Chrome → Settings → Billing →
+  Subscriptions (hay que tener la sesión abierta en la cuenta `fb4017507`; la URL `/settings/billing` da 404).
+  Limpieza 1 sigue sin borrar.
 - Desde el 28/10 hay una difusión de ManyChat a ex socios en marcha (Excel `no renovados.xlsx` y el CSV de la lista, con
   datos personales: no se suben al repo). Se envió el 28/10 a 431 contactos. Terminó: el 02/11 se sacó la oferta de $37.900
   de los prompts y los nodos `Leer Tags` / `Aviso Difusion` de WhatsApp. No mandar nada a Beto sin OK de Nano. Detalle en
