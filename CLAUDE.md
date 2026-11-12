@@ -32,6 +32,12 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   `Split Burbujas IG` (función `sinPunto`) y lo refuerza la regla 9 del prompt. Si se tocan esos nodos o las reglas de escritura, mantener
   las dos cosas en los dos canales. El dashboard no se ve afectado: cuenta la frase de la clase de prueba en la memoria del agente, que
   guarda el texto original de Gemini.
+- Desde el 12/11 (mensajes repetidos que reportó Beto): en WhatsApp contesta solo la ejecución del último mensaje del lead
+  (debounce real en `Execute a SQL query`), y `Buscar Repetida` + `Evitar Repetida` no mandan una respuesta igual a la anterior
+  si hubo un envío en los últimos 3 minutos. Los dos prompts tienen la regla 10 (no repetir el mensaje anterior) y responden corto
+  a preguntas repetidas y re-confirmaciones ("Dale, te esperamos!"). El prompt de WhatsApp trata `[Mensaje sin texto]`, que pone
+  `Mensaje Texto` cuando ManyChat manda `{{last_input_text}}` literal. Si se toca el buffer o `Split Burbujas`, mantener esos
+  nodos. Detalle en `docs/02-n8n-workflows.md`.
 - Desde el 15/10, el dashboard cuenta las clases de prueba buscando esa misma frase ("Avisá en recepción que venís a
   la clase de prueba") en la memoria de Delfina. Si se cambia en el prompt, cambiar también la función
   `dashboard_metricas` y la vista `v_gymbox_leads` de Supabase (`docs/17-dashboard-quejas-delfina.md`).
