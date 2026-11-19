@@ -64,6 +64,10 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   (2.265) y el reporte de Telegram puede estimar de más. Para ver el contador real: Chrome → Settings → Billing →
   Subscriptions (hay que tener la sesión abierta en la cuenta `fb4017507`; la URL `/settings/billing` da 404).
   Limpieza 1 sigue sin borrar.
+  **19/11:** había vuelto a pasar el tope (2.528/5.000, US$45); Nano borró Limpieza 2 (276) y 3 (92) y bajó a Pro 2.500 (US$25),
+  **2.161/2.500**, cargado a mano por Nano en `manychat_limpiezas`. Entran ~40 contactos por día. Limpieza 1 (291) sigue sin borrar.
+  ManyChat cobra el **último día de cada mes a las 13:33 (Argentina)**, por adelantado, con el tramo de ese momento, y prorratea los
+  cambios de tramo del mes: hay que estar debajo de 2.500 antes de ese cobro (Settings → Invoices → View Billing History).
 - Desde el 28/10 hay una difusión de ManyChat a ex socios en marcha (Excel `no renovados.xlsx` y el CSV de la lista, con
   datos personales: no se suben al repo). Se envió el 28/10 a 431 contactos. Terminó: el 02/11 se sacó la oferta de $37.900
   de los prompts y los nodos `Leer Tags` / `Aviso Difusion` de WhatsApp. No mandar nada a Beto sin OK de Nano. Detalle en
