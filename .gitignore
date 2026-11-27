@@ -29,3 +29,11 @@ no renovados*.csv
 
 # Documentación operativa interna (URLs de webhooks, IDs, prompts). NUNCA subir: repo público.
 docs/
+
+# Libro de caja del sistema del gym (nombres y pagos de socios). NUNCA subir.
+DETALLES *.csv
+# Export de socios del sistema del gym (celular, DNI, mail). NUNCA subir.
+*socios*.csv
+
+# Listas armadas para difusiones (celulares y nombres de ex socios). NUNCA subir.
+difusiones/

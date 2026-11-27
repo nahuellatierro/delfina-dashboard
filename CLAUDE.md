@@ -28,6 +28,16 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   ("Soy Delfina") y la confirmación de la clase de prueba ("Avisá en recepción que venís a la clase de prueba"), y
   nunca deja solos un saludo corto al principio ni una frase corta (hasta 45 caracteres) al final. Si se cambian
   esas frases en el prompt, cambiar también el código.
+- Desde el 02/11 ninguna burbuja de Delfina termina en punto final (pedido de Beto). Lo hace el código de `Split Burbujas` (WhatsApp) y
+  `Split Burbujas IG` (función `sinPunto`) y lo refuerza la regla 9 del prompt. Si se tocan esos nodos o las reglas de escritura, mantener
+  las dos cosas en los dos canales. El dashboard no se ve afectado: cuenta la frase de la clase de prueba en la memoria del agente, que
+  guarda el texto original de Gemini.
+- Desde el 12/11 (mensajes repetidos que reportó Beto): en WhatsApp contesta solo la ejecución del último mensaje del lead
+  (debounce real en `Execute a SQL query`), y `Buscar Repetida` + `Evitar Repetida` no mandan una respuesta igual a la anterior
+  si hubo un envío en los últimos 3 minutos. Los dos prompts tienen la regla 10 (no repetir el mensaje anterior) y responden corto
+  a preguntas repetidas y re-confirmaciones ("Dale, te esperamos!"). El prompt de WhatsApp trata `[Mensaje sin texto]`, que pone
+  `Mensaje Texto` cuando ManyChat manda `{{last_input_text}}` literal. Si se toca el buffer o `Split Burbujas`, mantener esos
+  nodos. Detalle en `docs/02-n8n-workflows.md`.
 - Desde el 15/10, el dashboard cuenta las clases de prueba buscando esa misma frase ("Avisá en recepción que venís a
   la clase de prueba") en la memoria de Delfina. Si se cambia en el prompt, cambiar también la función
   `dashboard_metricas` y la vista `v_gymbox_leads` de Supabase (`docs/17-dashboard-quejas-delfina.md`).
@@ -37,29 +47,53 @@ ejecuciones, historial y pendientes. Empezar por `docs/README.md`.
   charla a Delfina cuando el seguidor toca "Info": manda un mensaje fijo con un `[Aviso del sistema: seguidor nuevo ...]`
   que el prompt de IG sabe tratar. Si se cambia ese texto en ManyChat, cambiar también la regla del prompt de IG (y al
   revés). Ya no se pide el WhatsApp en ese flow. Detalle en `docs/03-manychat.md`.
-- Desde el 16/10 los precios de agosto valen como vigentes hasta que Beto pase precios nuevos: Delfina los pasa sin
-  decir que son de agosto ni mandar a recepción por precios. Cuando cambien, actualizar los dos prompts y la fila
-  `metodos_pago` de `Info_General` (y la pestaña `Precios`).
+- Desde el 02/11 rigen los precios nuevos: los dos prompts tienen dos bloques con fecha (hasta 01/11 y desde 02/11) y
+  Delfina los pasa como vigentes, sin mandar a recepción por precios. Cuando cambien de nuevo, actualizar los dos prompts
+  y la fila `metodos_pago` de `Info_General` (y la pestaña `Precios`). `metodos_pago` y `Precios` del Sheet ya están actualizados (02/11); la pestaña `Promos` quedó sin tocar (Delfina no la lee).
+- La Promo Noviembre ($38.900, Pase Full, 02 al 30/11) **sigue vigente** en los dos prompts: se había sacado por error y se restauró el 04/11
+  (`docs/20-plan-promo-noviembre.md`). Los dos prompts también explican que los precios se actualizaron el 02/11 cuando un lead dice que
+  antes pagaba menos. Sacar la promo el 01/12. Si hay una promo nueva, agregarla a los dos prompts con fecha de fin.
 - Desde el 19/10 ManyChat está en Pro 2.500 (US$25/mes): en el plan viejo el tramo sube y baja solo con el total de
   contactos con opt-in. Por pedido de Beto, los inactivos se **borran** (no se desuscriben) todos los meses con los
   segmentos "Limpieza 2" y "Limpieza 3". El borrado lo hace Nano a mano. Después, cargar el número de Billing en la
   tabla `manychat_limpiezas`: el reporte de Telegram estima el contador con esa tabla y avisa cuando toca limpiar
   (`docs/03-manychat.md`, `docs/12-reportes-delfina.md`).
+  **10/11:** el contador había pasado el tope (2.623/5.000, US$45); Nano borró Limpieza 2 y 3 y bajó a Pro 2.500
+  (US$25), **2.158/2.500**. Ese número **no se cargó** en `manychat_limpiezas` (el MCP de Supabase de esta cuenta no tiene
+  permiso sobre el proyecto de GymBox; Nano dijo que no hace falta): la última fila de la tabla sigue siendo la del 31/10
+  (2.265) y el reporte de Telegram puede estimar de más. Para ver el contador real: Chrome → Settings → Billing →
+  Subscriptions (hay que tener la sesión abierta en la cuenta `fb4017507`; la URL `/settings/billing` da 404).
+  Limpieza 1 sigue sin borrar.
+  **19/11:** había vuelto a pasar el tope (2.528/5.000, US$45); Nano borró Limpieza 2 (276) y 3 (92) y bajó a Pro 2.500 (US$25),
+  **2.161/2.500**, cargado a mano por Nano en `manychat_limpiezas`. Entran ~40 contactos por día. Limpieza 1 (291) sigue sin borrar.
+  ManyChat cobra el **último día de cada mes a las 13:33 (Argentina)**, por adelantado, con el tramo de ese momento, y prorratea los
+  cambios de tramo del mes: hay que estar debajo de 2.500 antes de ese cobro (Settings → Invoices → View Billing History).
+  **24/11:** estaba en 2.387/2.500 (+~45 por día, iba a pasar el tope antes del cobro del 30/11). Nano borró Limpieza 1 (290),
+  2 (158) y 3 (67): quedó en **1.872/2.500** (Pro 2.500, US$25), cargado a mano por Nano en `manychat_limpiezas`. Ya no queda
+  Limpieza 1 pendiente. El MCP de Supabase de esta sesión sigue sin acceso al proyecto de GymBox: las cargas van por el SQL Editor.
 - Desde el 28/10 hay una difusión de ManyChat a ex socios en marcha (Excel `no renovados.xlsx` y el CSV de la lista, con
-  datos personales: no se suben al repo). Se envió el 28/10 a 431 contactos; el workflow de WhatsApp lee el tag
-  `difusion_exsocios_2026_10` y le suma a Delfina un aviso (se apaga solo el 02/11). Los dos prompts tienen la oferta
-  del Pase Full a $37.900 hasta el 31/10: **al terminar la difusión sacar esa sección de los prompts** y los dos nodos
-  nuevos. No mandar nada a Beto sin OK de Nano. Detalle y pendientes en `docs/18-difusion-ex-socios.md`.
+  datos personales: no se suben al repo). Se envió el 28/10 a 431 contactos. Terminó: el 02/11 se sacó la oferta de $37.900
+  de los prompts y los nodos `Leer Tags` / `Aviso Difusion` de WhatsApp. No mandar nada a Beto sin OK de Nano. Detalle en
+  `docs/18-difusion-ex-socios.md`.
+- Desde el 26/11 la difusión a ex socios es mensual (segunda: 26/11, 373 contactos, precio hasta el 05/12). En WhatsApp, `Aviso Difusion`
+  arma el aviso por tag de campaña (tabla `CAMPANAS`), no responde los pedidos de BAJA y, desde el 27/11, tampoco un cierre (gracias, dale,
+  ok, emoji) si Delfi ya le contestó a ese ex socio desde el envío (nodo `Charla Previa`): el primer gracias se contesta una sola vez. El
+  prompt de WhatsApp dice precio y dirección una sola vez por charla y cierra corto con quien vuelve más adelante, no vuelve o es número
+  equivocado. Para una campaña nueva, agregar la fila en `CAMPANAS` (con `desde`) y en el clasificador. Detalle en `docs/22-difusion-noviembre.md`.
 - Desde el 28/10 el dashboard tiene la pestaña **Difusión** (`#difusion`, `DifusionTab.jsx`): muestra nombre y celular de
   los ex socios que respondieron, así que solo se ve con login y `dashboard_acceso`. Lee `dashboard_difusion()` y la tabla
   `difusion_respuestas`, que llena el workflow `GymBox - Clasificador Difusion` de n8n (cada 30 min hasta el 03/11; no manda
   mensajes). Si se cambian intenciones o motivos, cambiar a la vez el prompt del clasificador, el `check` de la tabla y las
   etiquetas de `DifusionTab.jsx` (`docs/19-desglose-difusion.md`). El CSV descargado tiene datos personales: no va al repo.
   Se despliega desde una copia limpia del commit, no desde la carpeta de trabajo (tiene archivos sueltos con datos).
+  Desde el 27/11 la pestaña se divide por difusión (Difusión 1 = 28/10, Difusión 2 = 26/11; el número sale del orden de envío) con
+  un selector y una tabla que las compara. `dashboard_difusion(p_campana, p_desde, p_hasta)` filtra por campaña (`null` = la
+  última). Para cada difusión nueva hay que cargar sus filas en `difusion_campanas` (por segmento y, si ManyChat da totales, una
+  fila con `segmento` null que manda sobre la suma) además de `CAMPANAS` y el clasificador (`docs/23-plan-dashboard-difusiones.md`).
 - Desde el 30/10 todas las actividades tienen clase de prueba, incluidas Boxeo y CrossFit (Beto lo avisó). Está en los dos
   prompts y en `Info_General` (`clase_prueba`) del Sheet. Antes, esas dos no tenían. Plan de la promo de noviembre y de los
-  precios nuevos del 02/11 en `docs/20-plan-promo-noviembre.md`. **Pendiente: el domingo 01/11 ejecutar ese plan** (precios nuevos
-  con fecha, Promo Noviembre $38.900, sacar la difusión); si ya pasó esa fecha y no está hecho, hacerlo primero.
+  precios nuevos del 02/11 en `docs/20-plan-promo-noviembre.md` (ejecutado el 02/11; faltan las pruebas con Gemini real y revisar
+  ManyChat).
 - En el gym no hay tatami: boxeo se hace con zapatillas y kickboxing descalzo. Está en los dos prompts y en la pestaña
   `Info_General` del Sheet (desde el 07/10). Delfina repite lo que diga el Sheet, así que un dato de negocio se
   corrige en el Sheet además del prompt.

@@ -24,8 +24,8 @@ const TABS = [
   { key: "difusion", label: "Difusión" },
 ];
 
-// La difusión a ex socios cierra el 01/11/2026: hasta entonces los resultados son parciales
-const DIFUSION_CIERRE = new Date(2026, 10, 2);
+// Clave del caché de la pestaña Difusión: difusión elegida ("" = la última) + período
+const claveDifusion = (campana, periodo) => `${campana || ""}|${periodo}`;
 
 /* Normaliza el estado que viene de Supabase a la versión que usa el dashboard */
 function cleanEstado(raw) {
@@ -81,7 +81,9 @@ function DelfinaDashboard({ email, onSignOut }) {
   const [metricas, setMetricas] = useState({});
   const [metricasError, setMetricasError] = useState(null);
 
-  // Difusión a ex socios (función dashboard_difusion), también guardada por período
+  // Difusión a ex socios (función dashboard_difusion), guardada por difusión y período.
+  // campanaDif = null muestra la última difusión enviada.
+  const [campanaDif, setCampanaDif] = useState(null);
   const [difusion, setDifusion] = useState({});
   const [difusionError, setDifusionError] = useState(null);
 
@@ -143,8 +145,10 @@ function DelfinaDashboard({ email, onSignOut }) {
       setTimeout(() => setDifusion(prev => ({ ...prev, [key]: null })), 300);
       return;
     }
-    const { desde, hasta } = rangoDe(key);
+    const [campana, per] = key.split("|");
+    const { desde, hasta } = rangoDe(per);
     const { data, error: rpcError } = await supabase.rpc("dashboard_difusion", {
+      p_campana: campana || null,
       p_desde: desde ? desde.toISOString() : null,
       p_hasta: hasta ? hasta.toISOString() : null,
     });
@@ -183,14 +187,15 @@ function DelfinaDashboard({ email, onSignOut }) {
     }
   }, [tab, periodo, metricas, sinAcceso, cargarMetricas]);
 
-  // Difusión: igual, una vez por período al entrar a la pestaña
+  // Difusión: igual, una vez por difusión y período al entrar a la pestaña
+  const claveDif = claveDifusion(campanaDif, periodo);
   useEffect(() => {
-    if (tab === "difusion" && !sinAcceso && !(periodo in difusion)) {
+    if (tab === "difusion" && !sinAcceso && !(claveDif in difusion)) {
       // cargarDifusion solo cambia estado después de un await o en un setTimeout.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      cargarDifusion(periodo);
+      cargarDifusion(claveDif);
     }
-  }, [tab, periodo, difusion, sinAcceso, cargarDifusion]);
+  }, [tab, claveDif, difusion, sinAcceso, cargarDifusion]);
 
   const cambiarTab = (key) => {
     setTab(key);
@@ -208,7 +213,7 @@ function DelfinaDashboard({ email, onSignOut }) {
   );
 
   const m = metricas[periodo];
-  const d = difusion[periodo];
+  const d = difusion[claveDif];
 
   // ── Loading / Error ────────────────────────────────────────────
   if (loading) return (
@@ -341,20 +346,15 @@ function DelfinaDashboard({ email, onSignOut }) {
         {tab === "difusion" && (
           d ? (
             <>
-              {new Date() < DIFUSION_CIERRE && (
-                <Nota tone="alerta">
-                  Resultados parciales: el precio especial vence el sábado 31 y las respuestas siguen entrando. Cierre el 01/11.
-                </Nota>
-              )}
               {periodo !== "todos" && (
                 <Nota>Enviados y entregados son de toda la difusión; el resto se filtra por la fecha del último mensaje.</Nota>
               )}
-              <DifusionTab m={d} />
+              <DifusionTab m={d} onCampana={setCampanaDif} />
             </>
           ) : difusionError ? (
             <Nota tone="error">
               No se pudieron cargar los datos ({difusionError}).{" "}
-              <button type="button" onClick={() => { setDifusionError(null); cargarDifusion(periodo); }} className="underline underline-offset-2 cursor-pointer">Reintentar</button>
+              <button type="button" onClick={() => { setDifusionError(null); cargarDifusion(claveDif); }} className="underline underline-offset-2 cursor-pointer">Reintentar</button>
             </Nota>
           ) : d === null ? <Nota>Sin datos en modo demo.</Nota> : <Nota>Cargando…</Nota>
         )}

@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>431 mensajes, 88 respuestas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #04070a; --green: #00f48e; --teal: #16e0a2; --cyan: #00feca; --red: #ff3d57; --orange: #ff9933; --blue: #5ab0ff;
+    --text: #ffffff; --muted: #9aa7a3; --card: rgba(14, 24, 22, 0.72); --line: rgba(22, 224, 162, 0.28);
+  }
+  @page { size: 1080px 1440px; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); }
+  body { font-family: 'Space Grotesk', sans-serif; color: var(--text); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .page { width: 1080px; height: 1440px; position: relative; overflow: hidden; background: var(--bg);
+    page-break-after: always; break-after: page; padding: 96px 88px; }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+
+  .aurora { position: absolute; border-radius: 50%; filter: blur(110px); opacity: .5; pointer-events: none; }
+  .grid { position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image: linear-gradient(rgba(22,224,162,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(22,224,162,.05) 1px, transparent 1px);
+    background-size: 72px 72px;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 75%); mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 75%); }
+  .content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; }
+
+  .tag { font-family: 'JetBrains Mono', monospace; font-size: 24px; letter-spacing: .14em; text-transform: uppercase; color: var(--teal);
+    display: inline-flex; align-items: center; gap: 14px; border: 1px solid var(--line); border-radius: 999px; padding: 12px 24px;
+    align-self: flex-start; background: rgba(6, 20, 16, .6); }
+  .tag .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--green); box-shadow: 0 0 14px var(--green); }
+
+  h1 { font-weight: 700; letter-spacing: -0.035em; line-height: .98; }
+  .lead { font-size: 38px; line-height: 1.35; color: #c9d4d0; font-weight: 400; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .accent { color: var(--green); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 36px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.02) inset, 0 30px 80px rgba(0,0,0,.55), 0 0 60px rgba(0,244,142,.08); }
+  .footer { margin-top: auto; display: flex; justify-content: space-between; align-items: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 22px; color: #5f6e6a; letter-spacing: .08em; }
+
+  /* ---------- P1 portada ---------- */
+  .p1 .big { margin-top: 90px; display: flex; align-items: baseline; gap: 26px; }
+  .p1 .big .n1 { font-size: 250px; font-weight: 700; letter-spacing: -0.06em; line-height: .9; color: #5f6e6a; }
+  .p1 .big .arrow { font-size: 110px; color: var(--teal); font-family: 'JetBrains Mono', monospace; }
+  .p1 .big .n2 { font-size: 330px; font-weight: 700; letter-spacing: -0.06em; line-height: .9; color: var(--green); text-shadow: 0 0 80px rgba(0,244,142,.45); }
+  .p1 h1 { font-size: 92px; margin-top: 70px; max-width: 880px; }
+  .p1 .lead { margin-top: 36px; max-width: 760px; }
+
+  /* ---------- P2 embudo ---------- */
+  .p2 h1 { font-size: 96px; margin-top: 54px; }
+  .funnel { margin-top: 64px; display: flex; flex-direction: column; gap: 22px; }
+  .row { display: grid; grid-template-columns: 210px 1fr; align-items: center; gap: 26px; }
+  .row .lab { font-size: 30px; line-height: 1.15; color: #c9d4d0; }
+  .row .bar { height: 104px; border-radius: 22px; display: flex; align-items: center; padding: 0 30px;
+    font-size: 54px; font-weight: 700; letter-spacing: -0.03em; color: #02130c; }
+  .row .bar small { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 500; margin-left: auto; letter-spacing: .04em; }
+  .b1 { width: 100%; background: linear-gradient(90deg, #2a3a36, #3a4d48); color: #e6efec !important; }
+  .b2 { width: 85%; background: linear-gradient(90deg, #0d6b52, #12a77c); }
+  .b3 { width: 34.3%; background: linear-gradient(90deg, #12a77c, #16e0a2); }
+  .b4 { width: 20.4%; background: linear-gradient(90deg, #16e0a2, #00f48e); }
+  .b5 { width: 13.9%; min-width: 150px; background: #00feca; box-shadow: 0 0 50px rgba(0,254,202,.5); }
+  .note { margin-top: 44px; font-size: 32px; color: var(--muted); line-height: 1.35; }
+
+  /* ---------- P3 clasificador ---------- */
+  .p3 h1 { font-size: 88px; margin-top: 54px; }
+  .reply { margin-top: 44px; padding: 40px 46px; border-radius: 40px 40px 40px 10px; font-size: 40px; line-height: 1.3; color: #e6efec; }
+  .reply .who { font-family: 'JetBrains Mono', monospace; font-size: 20px; color: var(--muted); letter-spacing: .08em; margin-bottom: 14px; }
+  .down { margin: 26px 0 26px 60px; font-family: 'JetBrains Mono', monospace; font-size: 26px; color: var(--teal); letter-spacing: .1em; display: flex; align-items: center; gap: 16px; }
+  .down i { display: block; width: 3px; height: 54px; background: linear-gradient(var(--teal), transparent); }
+  .tags { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .t { padding: 30px 34px; border-radius: 28px; }
+  .t .k { font-family: 'JetBrains Mono', monospace; font-size: 20px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .t .v { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; }
+  .t.wide { grid-column: 1 / 3; }
+  .t .v.sm { font-size: 31px; font-weight: 500; color: #dfe8e5; line-height: 1.3; letter-spacing: 0; }
+  .ex { margin-top: 26px; font-family: 'JetBrains Mono', monospace; font-size: 20px; color: #5f6e6a; letter-spacing: .06em; }
+
+  /* ---------- P4 resultado ---------- */
+  .p4 h1 { font-size: 96px; margin-top: 54px; }
+  .list { margin-top: 56px; display: flex; flex-direction: column; gap: 18px; }
+  .li { display: grid; grid-template-columns: 84px 1fr; gap: 24px; align-items: center; }
+  .li .num { font-size: 58px; font-weight: 700; letter-spacing: -0.04em; text-align: right; }
+  .li .txt { font-size: 33px; color: #dfe8e5; display: flex; flex-direction: column; gap: 9px; }
+  .li .trk { height: 16px; border-radius: 10px; background: rgba(255,255,255,.07); overflow: hidden; }
+  .li .trk i { display: block; height: 100%; border-radius: 10px; }
+  .cost { margin-top: auto; padding: 36px 44px; display: flex; align-items: center; gap: 36px; border-radius: 32px; }
+  .cost .amt { font-size: 90px; font-weight: 700; letter-spacing: -0.04em; color: var(--green); line-height: 1; }
+  .cost .d { font-size: 30px; line-height: 1.3; color: #c9d4d0; }
+
+  /* ---------- P5 aviso ---------- */
+  .p5 h1 { font-size: 96px; margin-top: 54px; }
+  .rail { margin-top: 70px; position: relative; height: 150px; }
+  .rail .line { position: absolute; left: 0; right: 0; top: 74px; height: 6px; border-radius: 4px;
+    background: linear-gradient(90deg, #12a77c 0%, #12a77c 35%, var(--orange) 70%, var(--red) 100%); opacity: .85; }
+  .rail .pt { position: absolute; top: 0; transform: translateX(-50%); text-align: center; }
+  .rail .pt .dot { width: 32px; height: 32px; border-radius: 50%; margin: 59px auto 0; border: 4px solid var(--bg); }
+  .rail .pt .n { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700; position: absolute; left: 50%; transform: translateX(-50%); top: 112px; white-space: nowrap; }
+  .rail .pt .ic { position: absolute; left: 50%; transform: translateX(-50%); top: 0; font-size: 40px; }
+  .tg { margin-top: 64px; padding: 40px 44px; border-radius: 36px 36px 36px 10px; font-size: 31px; line-height: 1.4; color: #e6efec; }
+  .tg .hd { font-family: 'JetBrains Mono', monospace; font-size: 20px; letter-spacing: .1em; color: var(--muted); margin-bottom: 16px; display: flex; justify-content: space-between; }
+  .tg b { color: #fff; }
+  .tg .ttl { font-size: 36px; font-weight: 700; margin-bottom: 12px; }
+  .tg .it { font-size: 25px; color: var(--muted); margin-top: 16px; }
+  .p5 .foot { margin-top: 36px; font-size: 32px; color: var(--muted); line-height: 1.35; }
+
+  /* ---------- P6 cierre ---------- */
+  .p6 h1 { font-size: 104px; margin-top: 120px; }
+  .p6 .lead { margin-top: 56px; max-width: 800px; }
+  .p6 .q { margin-top: 70px; padding: 44px 50px; font-size: 40px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+  .p6 .q span { color: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- ============ 1 · portada ============ -->
+<section class="page p1">
+  <div class="aurora" style="width:760px;height:760px;left:-220px;top:-160px;background:#00f48e;opacity:.32"></div>
+  <div class="aurora" style="width:700px;height:700px;right:-260px;bottom:-200px;background:#00b3d6;opacity:.30"></div>
+  <div class="grid"></div>
+  <div class="content">
+    <div class="tag"><span class="dot"></span>Difusión de WhatsApp</div>
+    <div class="big"><span class="n1">431</span><span class="arrow">→</span><span class="n2">88</span></div>
+    <h1>Mandé 431 mensajes. Contestaron 88.</h1>
+    <p class="lead">Qué hice con esas respuestas y con el costo de mandar tantos.</p>
+    <div class="footer"><span>01 / 06</span><span>deslizá →</span></div>
+  </div>
+</section>
+
+<!-- ============ 2 · embudo ============ -->
+<section class="page p2">
+  <div class="aurora" style="width:700px;height:700px;right:-300px;top:-200px;background:#00f48e;opacity:.28"></div>
+  <div class="grid"></div>
+  <div class="content">
+    <div class="tag"><span class="dot"></span>El recorrido</div>
+    <h1>De 431 a 60 con ganas de volver<span class="accent">.</span></h1>
+    <div class="funnel">
+      <div class="row"><div class="lab">Enviados</div><div class="bar b1">431</div></div>
+      <div class="row"><div class="lab">Entregados</div><div class="bar b2">368<small>85 %</small></div></div>
+      <div class="row"><div class="lab">Leídos</div><div class="bar b3">148</div></div>
+      <div class="row"><div class="lab">Respondieron</div><div class="bar b4">88</div></div>
+      <div class="row"><div class="lab">Con interés</div><div class="bar b5">60</div></div>
+    </div>
+    <p class="note">Leer 88 respuestas a mano es lento, y siempre queda alguna sin contestar.</p>
+    <div class="footer"><span>02 / 06</span><span>difusión a ex socios</span></div>
+  </div>
+</section>
+
+<!-- ============ 3 · clasificador ============ -->
+<section class="page p3">
+  <div class="aurora" style="width:720px;height:720px;left:-300px;bottom:-220px;background:#00f48e;opacity:.26"></div>
+  <div class="aurora" style="width:600px;height:600px;right:-260px;top:-100px;background:#00b3d6;opacity:.24"></div>
+  <div class="grid"></div>
+  <div class="content">
+    <div class="tag"><span class="dot"></span>El clasificador</div>
+    <h1>Una IA lee cada respuesta y la ordena<span class="accent">.</span></h1>
+    <div class="card reply">
+      <div class="who">RESPUESTA (EJEMPLO)</div>
+      "Me encantaría volver, pero este mes me quedé sin laburo. En diciembre vuelvo."
+    </div>
+    <div class="down"><i></i>lo lee y devuelve</div>
+    <div class="tags">
+      <div class="card t"><div class="k">Intención</div><div class="v" style="color:var(--blue)">Volverá más adelante</div></div>
+      <div class="card t"><div class="k">Motivo</div><div class="v">Trabajo / tiempo</div></div>
+      <div class="card t wide"><div class="k">Cita textual</div><div class="v sm">"En diciembre vuelvo."</div></div>
+    </div>
+    <p class="ex">// sin cita verificable, baja la confianza y se revisa a mano</p>
+    <div class="footer"><span>03 / 06</span><span>clasificador</span></div>
+  </div>
+</section>
+
+<!-- ============ 4 · resultado ============ -->
+<section class="page p4">
+  <div class="aurora" style="width:700px;height:700px;right:-300px;top:-220px;background:#00f48e;opacity:.26"></div>
+  <div class="grid"></div>
+  <div class="content">
+    <div class="tag"><span class="dot"></span>Lo que salió</div>
+    <h1>En un minuto, quién está listo<span class="accent">.</span></h1>
+    <div class="list">
+      <div class="li"><div class="num" style="color:var(--blue)">34</div><div class="txt">Volverá más adelante<div class="trk"><i style="width:100%;background:var(--blue)"></i></div></div></div>
+      <div class="li"><div class="num accent">26</div><div class="txt">Quiere volver<div class="trk"><i style="width:76%;background:var(--green)"></i></div></div></div>
+      <div class="li"><div class="num" style="color:#ffd24d">16</div><div class="txt">Dio un motivo<div class="trk"><i style="width:47%;background:#ffd24d"></i></div></div></div>
+      <div class="li"><div class="num" style="color:#9aa7a3">6</div><div class="txt">Sin dato<div class="trk"><i style="width:18%;background:#9aa7a3"></i></div></div></div>
+      <div class="li"><div class="num" style="color:#ff8a98">3</div><div class="txt">No vuelve<div class="trk"><i style="width:9%;background:#ff8a98"></i></div></div></div>
+      <div class="li"><div class="num" style="color:#9aa7a3">3</div><div class="txt">Solo agradece o ya renovó<div class="trk"><i style="width:9%;background:#9aa7a3"></i></div></div></div>
+    </div>
+    <div class="card cost"><div class="amt">US$0,3</div><div class="d">lo que costó clasificar las 88 respuestas con la IA.</div></div>
+    <div class="footer" style="margin-top:36px"><span>04 / 06</span><span>88 respuestas</span></div>
+  </div>
+</section>
+
+<!-- ============ 5 · aviso ============ -->
+<section class="page p5">
+  <div class="aurora" style="width:720px;height:720px;left:-280px;top:-200px;background:#ff9933;opacity:.2"></div>
+  <div class="aurora" style="width:700px;height:700px;right:-300px;bottom:-240px;background:#00f48e;opacity:.24"></div>
+  <div class="grid"></div>
+  <div class="content">
+    <div class="tag"><span class="dot"></span>El aviso</div>
+    <h1>Una difusión grande llena la cuenta<span class="accent">.</span></h1>
+    <div class="rail">
+      <div class="line"></div>
+      <div class="pt" style="left:4%"><span class="ic">📶</span><div class="dot" style="background:#12a77c"></div><div class="n" style="color:#12a77c">2.265</div></div>
+      <div class="pt" style="left:44%"><span class="ic">⚠️</span><div class="dot" style="background:#ffd24d"></div><div class="n" style="color:#ffd24d">2.300</div></div>
+      <div class="pt" style="left:68%"><span class="ic">🟠</span><div class="dot" style="background:var(--orange)"></div><div class="n" style="color:var(--orange)">2.400</div></div>
+      <div class="pt" style="left:94%"><span class="ic">🚨</span><div class="dot" style="background:var(--red)"></div><div class="n" style="color:var(--red)">2.500</div></div>
+    </div>
+    <div class="card tg">
+      <div class="hd"><span>AVISO DE TELEGRAM (EJEMPLO)</span><span>08:30</span></div>
+      <div class="ttl">⚠️ Cerca del tope de contactos</div>
+      Contactos estimados: <b>2.310 / 2.500</b><br>
+      Quedan ~190. A este ritmo llegás al tope en <b>~6 días</b>.
+      <div class="it">Qué hacer: borrar los inactivos y cargar el número nuevo.</div>
+    </div>
+    <p class="foot">A este gimnasio ya le había pasado: se pasaron del tope y el plan se encareció. Ahora el aviso escribe solo cuando cruza un umbral.</p>
+    <div class="footer"><span>05 / 06</span><span>aviso diario</span></div>
+  </div>
+</section>
+
+<!-- ============ 6 · cierre ============ -->
+<section class="page p6">
+  <div class="aurora" style="width:800px;height:800px;left:-260px;top:-240px;background:#00f48e;opacity:.3"></div>
+  <div class="aurora" style="width:700px;height:700px;right:-280px;bottom:-220px;background:#00b3d6;opacity:.28"></div>
+  <div class="grid"></div>
+  <div class="content">
+    <div class="tag"><span class="dot"></span>Lo que me quedó</div>
+    <h1>Lo que más rindió no fue la IA<span class="accent">.</span></h1>
+    <p class="lead">Fue ponerle un número a lo que antes era una sensación.</p>
+    <div class="card q"><span>→</span> ¿Cuántas respuestas de tus clientes quedan sin leer?</div>
+    <div class="footer"><span>06 / 06</span><span></span></div>
+  </div>
+</section>
+
+</body>
+</html>
