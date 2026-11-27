@@ -109,8 +109,58 @@ function Barras({ datos, color, vacio }) {
 
 const porcentaje = (n, total) => (total > 0 ? `${Math.round((n / total) * 100)} %` : "—");
 
-function DifusionTab({ m }) {
+const ORDEN_SEGMENTOS = ["A", "B", "C", "tibio"];
+const DIAS_EN_CURSO = 14;
+
+const fechaCorta = (iso) => (iso ? new Date(iso).toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" }) : "");
+const nombreDifusion = (x) => `Difusión ${x.numero}${x.enviada_at ? ` · ${fechaCorta(x.enviada_at)}` : ""}`;
+const enCurso = (iso) => iso && Date.now() - new Date(iso).getTime() < DIAS_EN_CURSO * 24 * 60 * 60 * 1000;
+
+// Comparación de todas las difusiones (totales de cada una, sin el filtro de período)
+function Comparacion({ difusiones, actual }) {
+  if (difusiones.length < 2) return null;
+  const cols = ["Difusión", "Enviados", "Entregados", "Leídos", "Respondieron", "Quieren volver"];
+  return (
+    <Card title="Comparación entre difusiones" className="mb-6">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm tabular-nums">
+          <caption className="sr-only">Comparación de resultados entre difusiones</caption>
+          <thead>
+            <tr className="border-b border-white/[0.06]">
+              {cols.map(h => (
+                <th key={h} scope="col" className="pb-3 pr-4 text-left text-[10px] uppercase tracking-[1.5px] text-white/50 font-mono font-normal">{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {difusiones.map(x => (
+              <tr key={x.campana} className={`border-b border-white/[0.04] ${x.campana === actual ? "bg-emerald-500/[0.04]" : ""}`}>
+                <th scope="row" className="py-3 pr-4 text-left font-medium text-white/80">
+                  {nombreDifusion(x)}
+                  {enCurso(x.enviada_at) && <span className="ml-2 text-[11px] font-normal text-yellow-300/80">en curso</span>}
+                </th>
+                <td className="py-3 pr-4 text-white/70">{fmt(x.enviados)}</td>
+                <td className="py-3 pr-4 text-white/70">{fmt(x.entregados)} <span className="text-white/45">({porcentaje(x.entregados, x.enviados)})</span></td>
+                <td className="py-3 pr-4 text-white/70">{fmt(x.leidos)} <span className="text-white/45">({porcentaje(x.leidos, x.entregados)})</span></td>
+                <td className="py-3 pr-4 text-white/70">{fmt(x.respondieron)} <span className="text-white/45">({porcentaje(x.respondieron, x.entregados)})</span></td>
+                <td className="py-3 pr-4 text-emerald-400">{fmt(x.quieren_volver)} <span className="text-white/45">({porcentaje(x.quieren_volver, x.respondieron)})</span></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-4 text-xs text-white/50 text-pretty">
+        Entregados sobre enviados; leídos y respondieron sobre entregados; quieren volver sobre los que respondieron.
+        Una difusión “en curso” todavía recibe respuestas.
+      </p>
+    </Card>
+  );
+}
+
+function DifusionTab({ m, onCampana }) {
   const filas = useMemo(() => m.filas || [], [m.filas]);
+  const difusiones = useMemo(() => m.difusiones || [], [m.difusiones]);
+  const numero = m.numero ?? "";
   const [intencion, setIntencion] = useState("");
   const [motivo, setMotivo] = useState("");
   const [search, setSearch] = useState("");
@@ -143,10 +193,39 @@ function DifusionTab({ m }) {
   const entregados = Number(m.entregados) || 0;
   const respondieron = Number(m.respondieron) || 0;
 
+  // Enviados por segmento de la difusión elegida (A, B, C, tibio: los que tenga)
+  const enviadosSeg = useMemo(() => {
+    const t = {};
+    for (const c of m.campanas || []) t[c.segmento] = (t[c.segmento] || 0) + Number(c.enviados || 0);
+    return ORDEN_SEGMENTOS.filter(s => t[s]).map(s => ({ s, enviados: t[s] }));
+  }, [m.campanas]);
+  const subEnviados = enviadosSeg.map(x => `${x.s} ${fmt(x.enviados)}`).join(" · ");
+
+  const cambiarDifusion = (campana) => {
+    setIntencion(""); setMotivo(""); setSearch(""); setLimite(FEED_PAGE);
+    onCampana?.(campana);
+  };
+
   return (
     <>
+      {difusiones.length > 0 && (
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <FilterGroup label="Difusión">
+            {difusiones.map(x => (
+              <FilterPill key={x.campana} label={nombreDifusion(x)} active={x.campana === m.campana} onClick={() => cambiarDifusion(x.campana)} />
+            ))}
+          </FilterGroup>
+          {m.enviada_at && (
+            <p className="text-xs text-white/55 text-pretty">
+              Enviada el {new Date(m.enviada_at).toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })}
+              {enCurso(m.enviada_at) ? " · todavía entran respuestas" : ""}
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
-        <KPI label="Enviados" value={fmt(m.enviados)} sub={`${(m.campanas || []).length} tandas`} />
+        <KPI label="Enviados" value={fmt(m.enviados)} sub={subEnviados || undefined} />
         <KPI label="Entregados" value={fmt(m.entregados)} sub={`${porcentaje(entregados, Number(m.enviados))} de los enviados`} />
         <KPI label="Respondieron" value={fmt(m.respondieron)} sub={`${porcentaje(respondieron, entregados)} de los entregados`} />
         <KPI label="Quieren volver" value={fmt(m.quieren_volver)} sub={`${porcentaje(Number(m.quieren_volver), respondieron)} de los que respondieron`} accent />
@@ -154,13 +233,15 @@ function DifusionTab({ m }) {
         <KPI label="Bajas" value={fmt(m.bajas)} sub="sacarlos de ManyChat" tone={m.bajas ? "text-red-400" : undefined} />
       </div>
 
+      <Comparacion difusiones={difusiones} actual={m.campana} />
+
       <div className={`${glass} p-6 mb-4`}>
         <div className="mb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h3 className="text-[13px] uppercase tracking-[1.5px] text-white/40 font-mono tabular-nums">
             Quieren volver ({fmt(quierenVolver.length)})
           </h3>
           {quierenVolver.length > 0 && (
-            <button type="button" onClick={() => descargarCsv(quierenVolver, "quieren-volver-difusion.csv")} className={`${btnSecundario} self-start sm:self-auto`}>
+            <button type="button" onClick={() => descargarCsv(quierenVolver, `quieren-volver-difusion-${numero}.csv`)} className={`${btnSecundario} self-start sm:self-auto`}>
               Descargar CSV
             </button>
           )}
@@ -181,7 +262,7 @@ function DifusionTab({ m }) {
               {quierenVolver.map(f => {
                 const seguimiento = SEGUIMIENTO[f.seguimiento] || SEGUIMIENTO.pendiente;
                 return (
-                  <li key={f.session_id} className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_2fr_0.7fr_0.8fr] gap-2 lg:gap-3 px-4 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+                  <li key={`${f.campana}-${f.session_id}`} className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_2fr_0.7fr_0.8fr] gap-2 lg:gap-3 px-4 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
                     <span className="flex items-center text-sm text-white/80 font-medium">{f.nombre || "Sin nombre"}</span>
                     <span className="flex items-center"><Celular numero={f.celular} /></span>
                     <div className="flex flex-col justify-center">
@@ -213,17 +294,15 @@ function DifusionTab({ m }) {
           </Card>
 
           <Card title="Respuestas por segmento">
-            <dl className="grid grid-cols-3 gap-3 text-sm">
-              {["A", "B", "C"].map(s => {
-                const enviados = (m.campanas || []).filter(c => c.segmento === s).reduce((t, c) => t + Number(c.enviados || 0), 0);
-                return (
-                  <div key={s}>
-                    <dt className="text-xs text-white/55">{s}{enviados ? ` · ${fmt(enviados)} enviados` : ""}</dt>
-                    <dd className="font-semibold text-white/85 tabular-nums">{fmt(seg[s])}</dd>
-                  </div>
-                );
-              })}
+            <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              {(enviadosSeg.length ? enviadosSeg : [{ s: "A" }, { s: "B" }, { s: "C" }]).map(({ s, enviados }) => (
+                <div key={s}>
+                  <dt className="text-xs text-white/55">{s}{enviados ? ` · ${fmt(enviados)} enviados` : ""}</dt>
+                  <dd className="font-semibold text-white/85 tabular-nums">{fmt(seg[s] || 0)}</dd>
+                </div>
+              ))}
             </dl>
+            <p className="mt-4 text-xs text-white/50 text-pretty">El segmento de cada respuesta es el que tenía el contacto en ManyChat.</p>
           </Card>
         </div>
       </div>
@@ -235,7 +314,7 @@ function DifusionTab({ m }) {
           </h3>
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             {visibles.length > 0 && (
-              <button type="button" onClick={() => descargarCsv(visibles, "respuestas-difusion.csv", true)} className={`${btnSecundario} tabular-nums`}>
+              <button type="button" onClick={() => descargarCsv(visibles, `respuestas-difusion-${numero}.csv`, true)} className={`${btnSecundario} tabular-nums`}>
                 Descargar CSV ({fmt(visibles.length)})
               </button>
             )}
@@ -284,7 +363,7 @@ function DifusionTab({ m }) {
             {visibles.slice(0, limite).map(f => {
               const conf = f.confianza == null ? null : Number(f.confianza);
               return (
-                <li key={f.session_id} className="grid grid-cols-1 lg:grid-cols-[1fr_0.4fr_0.9fr_0.9fr_0.9fr_1.6fr_0.4fr] gap-2 lg:gap-3 px-4 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+                <li key={`${f.campana}-${f.session_id}`} className="grid grid-cols-1 lg:grid-cols-[1fr_0.4fr_0.9fr_0.9fr_0.9fr_1.6fr_0.4fr] gap-2 lg:gap-3 px-4 py-3.5 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
                   <div className="flex flex-col">
                     <span className="text-sm text-white/80 font-medium">{f.nombre || "Sin nombre"}</span>
                     <Celular numero={f.celular} />
